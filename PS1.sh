@@ -38,4 +38,32 @@ grep "${PCID}" itcont.txt | cut -d '|' -f 15 | grep -v "-" | wc -l
 grep "${PCID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | grep -v "-" | wc -l
 
 
+#### 1.(c)
+# Functionalize 1.(b)
+function getCont () {
+    ID=$(grep -i "|${1}," cn.txt | cut -d '|' -f 10 | head -n 1)
+    NM=$(grep "${ID}" cn.txt | cut -d '|' -f 2)
+    echo "The number of contributions above \$200 nationwide for ${NM} is :"
+    grep "${ID}" itcont.txt | cut -d '|' -f 15 | grep -v "-" | wc -l
+    echo "The number of contributions above \$200 in California for ${NM} is :"
+    grep "${ID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | grep -v "-" | wc -l
+}
+
+cnName=$(cat cnName.txt)
+for name in $cnName
+do
+    getCont $name
+done
+
+
+
+
+
+
+
+
+
+
+
+
 
