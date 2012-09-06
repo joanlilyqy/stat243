@@ -1,0 +1,58 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{\today}
+\chead{}
+\rhead{Stat243 Fa12}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{graphicx}
+%% for inline R code: if the inline code is not correctly parsed, you will see a message
+\newcommand{\rinline}[1]{SOMETHING WORNG WITH knitr}
+%% begin.rcode setup, include=FALSE
+% opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-')
+%% end.rcode
+
+\title{Stat243: Problem Set 1}
+\author{Ying Qiao}
+
+\begin{document}
+\maketitle
+\newpage
+
+\section*{Problem 1}
+\subsection*{(a)}
+
+\subsection*{(b)}
+
+\subsection*{(c)}
+
+\newpage
+
+\section*{Problem 2}
+\subsection*{(a)}
+
+\subsection*{(b)}
+
+\newpage
+
+\section*{Problem 3}
+
+Crime rates in the US are high compared to European countries. Here I `analyze' the variation in murder across US states using R. I show a histogram of rates of arrest for murder for the 50 states and find the states with the lowest and highest murder arrest rates.
+
+%% begin.rcode arrest-hist, dev='cairo_pdf', fig.width=5, fig.height=5, out.width='.8\\textwidth'
+% hist(USArrests$Murder)
+%% end.rcode
+
+%% chunk options: cache this chunk
+%% begin.rcode arrest-cache, cache=TRUE
+% lowHi <- c(which.min(USArrests$Murder), which.max(USArrests$Murder))
+% attributes(USArrests)$row.names[lowHi]
+%% end.rcode
+
+The state with the lowest rate is \rinline{attributes(USArrests)$row.names[which.min(USArrests$Murder)]}. The state with the highest rate is \rinline{attributes(USArrests)$row.names[which.max(USArrests$Murder)]}.
+
+\end{document}
