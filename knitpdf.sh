@@ -15,4 +15,5 @@ function knitpdf () {
     pdflatex --enable-pipes --shell-escape ${1}-out.tex
     rm -rf cache/ figure/
     rm -f *~ *.log *.aux
+    rm -f ${1}-out.tex ${2}.tex ${3}.tex
 }
