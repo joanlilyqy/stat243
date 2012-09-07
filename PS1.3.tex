@@ -137,7 +137,7 @@ The loop-to-loop calling of the functions for multiple predefined candidates is 
 cnName=$(cat name_cn.txt)
 for name in $cnName
 do
-		getTotalCont $name
+    getTotalCont $name
     getContNation $name
     getContCA $name
     echo "${NM} :"
@@ -174,9 +174,9 @@ function remoteRJobs () {
 		   ssh $1 ps -C R -o pid,user,%cpu,comm --sort=-%cpu | grep -v PID
 		   echo ""
 		else
-			 echo "ERROR: ***************************"
+		   echo "ERROR: ***************************"
 		   echo "remoteRJobs MACHINE [number]"
-			 echo ""
+		   echo ""
 		fi 
 }
 \end{lstlisting}
@@ -192,7 +192,7 @@ function mysum () {
 		sum=0
 		for num in $(cat $1)
 		do
-			sum=$((sum+=num))
+		    sum=$((sum+=num))
 		done
 }
 
@@ -230,9 +230,9 @@ function remoteRJobs2 () {
 		   
 		   echo ""
 		else
-			 echo "ERROR: ***************************"
+		   echo "ERROR: ***************************"
 		   echo "remoteRJobs MACHINE [number]"
-			 echo ""
+		   echo ""
 		fi 
 }
 \end{lstlisting}
