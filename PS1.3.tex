@@ -8,7 +8,7 @@
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \lhead{\today}
-\chead{Ying Qiao}
+\chead{Ying Qiao SID:21412301}
 \rhead{Stat243 Fa12: Problem Set 1}
 \lfoot{}
 \cfoot{\thepage}
@@ -19,29 +19,29 @@
 \usepackage[T1]{fontenc}
 \usepackage{listings}
 \lstset{
-				frame=tb,
-				language=sh,
-				aboveskip=3mm,
-				belowskip=3mm,
-				basicstyle={\small\ttfamily},
-				numberstyle=\tiny\color{gray},
-				keywordstyle=\color{blue},
-				commentstyle=\color{dkgreen},
-				stringstyle=\color{mauve},
-				breaklines=true,
-				breakatwhitespace=true,
-				prebreak=\textbackslash,
-				showstringspaces=false,
-				columns=fullflexible,
-				upquote=true
-				}
+	frame=tb,
+	language=sh,
+	aboveskip=3mm,
+	belowskip=3mm,
+	basicstyle={\small\ttfamily},
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	prebreak=\textbackslash,
+	showstringspaces=false,
+	columns=fullflexible,
+	upquote=true
+	}
 %% for inline R code: if the inline code is not correctly parsed, you will see a message
 \newcommand{\rinline}[1]{SOMETHING WORNG WITH knitr}
 %% begin.rcode setup, include=FALSE
 % opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-')
 %% end.rcode
 
-\immediate\write18{./PS1.1.sh > PS1.1.tex}
+\immediate\write18{shelltex PS1.1}
 %%\immediate\write18{./PS1.2.sh > PS1.2.tex}
 
 \begin{document}
@@ -98,8 +98,7 @@ grep "${PCID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | grep -v "-" | wc -l
 
 \subsection*{(c)}
 
-We functionalize the shell commands in (b) to get results for multiple candidates. A file of candidates names is generated for
-testing the functions.
+We functionalize the shell commands in (b) to get results for multiple candidates. A file of candidates names is generated for testing the functions.
 
 \begin{lstlisting}
 # Get the last name(s) of the 2012 presidential candidates in the REP and DEM
@@ -115,7 +114,7 @@ Three functions are built for getting the total contributions (\textit{getTotalC
 \begin{lstlisting}
 # Functions
 function getTotalCont () {
-		ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 1 | head -n 1)
+    ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 1 | head -n 1)
     NM=$(grep "${ID}" pres_cn.txt | cut -d '|' -f 2)
     TOTAL=$(grep "${ID}" CanSum_clean.csv | cut -d ',' -f 20)
 }
