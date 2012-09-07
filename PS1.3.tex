@@ -86,14 +86,14 @@ unzip -q cn12    # get cn.txt
 unzip -q indiv12 # get itcont.txt
 # Clear cn.txt down to current candidates for presidential race year 2012
 cut cn.txt -d '|' -f 1-6,9-11 | grep "|2012|US|P|C|" > pres_cn.txt
-# Grab PC ID with last name
+# Grab PC ID with last name, return the first one if duplicated
 NAME="OBAMA"
 PCID=$(grep "|${NAME}," pres_cn.txt | cut -d '|' -f 8 | head -n 1)
-# Individual contribution counts (only over $200 is recorded, exclude negative number counts)
+# Individual contribution counts (only over 200 is recorded, ingore negative number counts, treat as input error)
 # National counts
-grep "${PCID}" itcont.txt | cut -d '|' -f 15 | grep -v "-" | wc -l
+grep "${PCID}" itcont.txt | cut -d '|' -f 15 | wc -l
 # California counts
-grep "${PCID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | grep -v "-" | wc -l
+grep "${PCID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | wc -l
 \end{lstlisting}
 
 \subsection*{(c)}
@@ -121,12 +121,12 @@ function getTotalCont () {
 function getContNation () {
     ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 8 | head -n 1)
     NM=$(grep "${ID}" pres_cn.txt | cut -d '|' -f 2)
-    NCOUNT=$(grep "${ID}" itcont.txt | cut -d '|' -f 15 | grep -v "-" | wc -l)
+    NCOUNT=$(grep "${ID}" itcont.txt | cut -d '|' -f 15 | wc -l)
 }
 function getContCA () {
     ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 8 | head -n 1)
     NM=$(grep "${ID}" pres_cn.txt | cut -d '|' -f 2)
-    CACOUNT=$(grep "${ID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | grep -v "-" | wc -l)
+    CACOUNT=$(grep "${ID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | wc -l)
 }
 \end{lstlisting}
 

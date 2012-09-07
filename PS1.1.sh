@@ -40,19 +40,19 @@ rm -f *.zip
 # Clear cn.txt down to current candidates for presidential race year 2012
 cut cn.txt -d '|' -f 1-6,9-11 | grep "|2012|US|P|C|" > pres_cn.txt
 
-# Grab PC ID with last name
+# Grab PC ID with last name, only return the first one if duplicated
 NAME="OBAMA"
 PCID=$(grep "|${NAME}," pres_cn.txt | cut -d '|' -f 8 | head -n 1)
 
-# Individual contribution counts (only over $200 is recorded, exclude negative number counts)
+# Individual contribution counts (only over $200 is recorded, ignore negative number counts, treat as input error)
 # National counts
 echo "-----------------1.(b) with test case "OBAMA"----------------------"
 echo "The number of contributions above 200 nationwide for ${NAME} is :"
-grep "${PCID}" itcont.txt | cut -d '|' -f 15 | grep -v "-" | wc -l
+grep "${PCID}" itcont.txt | cut -d '|' -f 15 | wc -l
 echo ""
 # California counts
 echo "The number of contributions above 200 in California for ${NAME} is :"
-grep "${PCID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | grep -v "-" | wc -l
+grep "${PCID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | wc -l
 echo ""
 echo "-------------------------------------------------------------------"
 echo ""
@@ -68,7 +68,7 @@ sed 's/\([^",]\),/\1/g' CandidateSummary.csv | sed 's/[$"]//g' > CanSum_clean.cs
 
 # Functionalize 1.(a) and (b)
 function getTotalCont () {
-		ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 1 | head -n 1)
+    ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 1 | head -n 1)
     NM=$(grep "${ID}" pres_cn.txt | cut -d '|' -f 2)
     TOTAL=$(grep "${ID}" CanSum_clean.csv | cut -d ',' -f 20)
 }
@@ -76,13 +76,13 @@ function getTotalCont () {
 function getContNation () {
     ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 8 | head -n 1)
     NM=$(grep "${ID}" pres_cn.txt | cut -d '|' -f 2)
-    NCOUNT=$(grep "${ID}" itcont.txt | cut -d '|' -f 15 | grep -v "-" | wc -l)
+    NCOUNT=$(grep "${ID}" itcont.txt | cut -d '|' -f 15 | wc -l)
 }
 
 function getContCA () {
     ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 8 | head -n 1)
     NM=$(grep "${ID}" pres_cn.txt | cut -d '|' -f 2)
-    CACOUNT=$(grep "${ID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | grep -v "-" | wc -l)
+    CACOUNT=$(grep "${ID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | wc -l)
 }
 
 echo "---------------------1.(c) with REP,DEM|P----------------------"
