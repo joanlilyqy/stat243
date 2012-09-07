@@ -1,34 +1,155 @@
 \documentclass{article}
+
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
 \usepackage[margin=1in]{geometry}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \lhead{\today}
-\chead{}
-\rhead{Stat243 Fa12}
+\chead{Ying Qiao}
+\rhead{Stat243 Fa12: Problem Set 1}
 \lfoot{}
 \cfoot{\thepage}
 \rfoot{}
-\usepackage{amsmath,amsthm,amssymb}
 \usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+\lstset{
+				frame=tb,
+				language=sh,
+				aboveskip=3mm,
+				belowskip=3mm,
+				basicstyle={\small\ttfamily},
+				numberstyle=\tiny\color{gray},
+				keywordstyle=\color{blue},
+				commentstyle=\color{dkgreen},
+				stringstyle=\color{mauve},
+				breaklines=true,
+				breakatwhitespace=true,
+				prebreak=\textbackslash,
+				showstringspaces=false,
+				columns=fullflexible,
+				upquote=true
+				}
 %% for inline R code: if the inline code is not correctly parsed, you will see a message
 \newcommand{\rinline}[1]{SOMETHING WORNG WITH knitr}
 %% begin.rcode setup, include=FALSE
 % opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-')
 %% end.rcode
 
-\title{Stat243: Problem Set 1}
-\author{Ying Qiao}
+\immediate\write18{./PS1.1.sh > PS1.1.tex}
+%%\immediate\write18{./PS1.2.sh > PS1.2.tex}
 
 \begin{document}
-\maketitle
-\newpage
 
 \section*{Problem 1}
 \subsection*{(a)}
 
+To extract the data for Republican and Democratic candidates of Senate into two files,
+\textit{wget} is used to download the summary file and piping with \textit{grep} to file output gives me the result.
+
+\begin{lstlisting}
+# Download .csv from FEC
+wget -q -O "CandidateSummary.csv" "http://www.fec.gov/data/CandidateSummary.do?format=csv"
+# Extract Senate, and then split into 'REP' and 'DEM'
+grep "\"S\"" CandidateSummary.csv | grep "\"REP\"" > REP.csv
+grep "\"S\"" CandidateSummary.csv | grep "\"DEM\"" > DEM.csv
+\end{lstlisting}
+
+With pre-processing using \textit{sed} commands given, we can then \textit{cut} the fields and
+\textit{sort} according to total contributions by printing the top 5 with \textit{head}.
+
+\begin{lstlisting}
+# Preprocessing before spliting fields
+sed 's/\([^",]\),/\1/g' REP.csv | sed 's/[$"]//g' > REPclean.csv
+sed 's/\([^",]\),/\1/g' DEM.csv | sed 's/[$"]//g' > DEMclean.csv
+# Sort on total contribution and display the richest five
+cut -d ',' -f 2,3,4,5,7,8,20 REPclean.csv | sort -n -r -t ',' -k 7 | head -n 5
+cut -d ',' -f 2,3,4,5,7,8,20 DEMclean.csv | sort -n -r -t ',' -k 7 | head -n 5
+\end{lstlisting}
+
 \subsection*{(b)}
 
+After downloading the files, we \textit{unzip} to get the \textit{*.txt} files. With stored \textit{PCID},
+we can extract the number of contributions for a given candidate. This part of work is focused on the current
+candidates for presidential race year 2012.
+
+\begin{lstlisting}
+# Download from FEC
+wget -q "ftp://ftp.fec.gov/FEC/2012/cn12.zip"
+wget -q "ftp://ftp.fec.gov/FEC/2012/indiv12.zip"
+unzip -q cn12    # get cn.txt
+unzip -q indiv12 # get itcont.txt
+# Clear cn.txt down to current candidates for presidential race year 2012
+cut cn.txt -d '|' -f 1-6,9-11 | grep "|2012|US|P|C|" > pres_cn.txt
+# Grab PC ID with last name
+NAME="OBAMA"
+PCID=$(grep "|${NAME}," pres_cn.txt | cut -d '|' -f 8 | head -n 1)
+# Individual contribution counts (only over $200 is recorded, exclude negative number counts)
+# National counts
+grep "${PCID}" itcont.txt | cut -d '|' -f 15 | grep -v "-" | wc -l
+# California counts
+grep "${PCID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | grep -v "-" | wc -l
+\end{lstlisting}
+
 \subsection*{(c)}
+
+We functionalize the shell commands in (b) to get results for multiple candidates. A file of candidates names is generated for
+testing the functions.
+
+\begin{lstlisting}
+# Get the last name(s) of the 2012 presidential candidates in the REP and DEM
+# These are candidates of interest for my discussion
+grep "|DEM\|REP|" pres_cn.txt | cut -d '|' -f 2 | cut -d ',' -f 1 > name_cn.txt
+# Clean for split fields to get total contributions of candidates
+sed 's/\([^",]\),/\1/g' CandidateSummary.csv | sed 's/[$"]//g' > CanSum_clean.csv
+\end{lstlisting}
+
+Three functions are built for getting the total contributions (\textit{getTotalCont}), number of contributions 
+(over \$200) nationwide (\textit{getContNation}) and in California (\textit{getContCA}).
+
+\begin{lstlisting}
+# Functions
+function getTotalCont () {
+		ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 1 | head -n 1)
+    NM=$(grep "${ID}" pres_cn.txt | cut -d '|' -f 2)
+    TOTAL=$(grep "${ID}" CanSum_clean.csv | cut -d ',' -f 20)
+}
+function getContNation () {
+    ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 8 | head -n 1)
+    NM=$(grep "${ID}" pres_cn.txt | cut -d '|' -f 2)
+    NCOUNT=$(grep "${ID}" itcont.txt | cut -d '|' -f 15 | grep -v "-" | wc -l)
+}
+function getContCA () {
+    ID=$(grep "|${1}," pres_cn.txt | cut -d '|' -f 8 | head -n 1)
+    NM=$(grep "${ID}" pres_cn.txt | cut -d '|' -f 2)
+    CACOUNT=$(grep "${ID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | grep -v "-" | wc -l)
+}
+\end{lstlisting}
+
+The loop-to-loop calling of the functions for multiple predefined candidates is realized with \textit{for...do...done}.
+
+\begin{lstlisting}
+# Call the function
+cnName=$(cat name_cn.txt)
+for name in $cnName
+do
+		getTotalCont $name
+    getContNation $name
+    getContCA $name
+    echo "${NM} :"
+    echo "${TOTAL}|${NCOUNT}|${CACOUNT}"
+done
+\end{lstlisting}
+
+\subsection*{Shell script running results}
+
+\input{"./PS1.1.tex"}
+
 
 \newpage
 

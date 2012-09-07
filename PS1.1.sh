@@ -47,11 +47,11 @@ PCID=$(grep "|${NAME}," pres_cn.txt | cut -d '|' -f 8 | head -n 1)
 # Individual contribution counts (only over $200 is recorded, exclude negative number counts)
 # National counts
 echo "-----------------1.(b) with test case "OBAMA"----------------------"
-echo "The number of contributions above \$200 nationwide for ${NAME} is :"
+echo "The number of contributions above 200 nationwide for ${NAME} is :"
 grep "${PCID}" itcont.txt | cut -d '|' -f 15 | grep -v "-" | wc -l
 echo ""
 # California counts
-echo "The number of contributions above \$200 in California for ${NAME} is :"
+echo "The number of contributions above 200 in California for ${NAME} is :"
 grep "${PCID}" itcont.txt | grep "CA" | cut -d '|' -f 15 | grep -v "-" | wc -l
 echo ""
 echo "-------------------------------------------------------------------"
@@ -88,8 +88,8 @@ function getContCA () {
 echo "---------------------1.(c) with REP,DEM|P----------------------"
 echo "For candidates in presidential race of year 2012,"
 echo "---[the total contributions|"
-echo "# of contributions above \$200 nationwide|"
-echo "# of contributions above \$200 in California (CA)]---"
+echo "number of contributions above 200 nationwide|"
+echo "number of contributions above 200 in California (CA)]---"
 echo ""
 cnName=$(cat name_cn.txt)
 for name in $cnName
