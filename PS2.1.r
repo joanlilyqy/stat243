@@ -16,80 +16,80 @@ ob6 <- rnorm(1000000)
 ob7 <- rnorm(10000000)
 
 # Aux Printing Fun:
-printUnit <- function (obj) { # print out file size according to auto-match units
-            	units = c("", "k", "M", "G"); digit = 10
-            	i = 1; while (obj >= 1024) { obj = obj / 1024; i = i + 1;}
-            	if (i == 1) { cat(format(obj,width = digit,justify = 'right'),"\n",sep = "") }
-            	else { cat(format(as.integer(obj),width = digit - 1,justify = 'right'),units[i],"\n",sep = "") }
-            }
-           
-printObj <- function (objList) { # print out the object list nicely
-            	wid = 20; digit = 10
-            	cat(format("object",width = wid),format("bytes",width = digit,justify = 'right'),"\n",sep = "")
-         	    for (i in 1:length(objList)) {
-         	  		cat(format(names(objList)[i],width = wid),format(objList[i],width = digit,justify = 'right'),"\n",sep = "")
-         	    }
-            }
+# Define printing control global parameter
+wid = 20		# object name priting width
+digit = 10	# byte size printing digits
 
-printObjPretty <- function (objList) { # print out the object list NICELY&PRETTY
-                  	wid = 20; digit = 10
-                  	cat(format("object",width = wid),format("bytes",width = digit,justify = 'right'),"\n",sep = "")
-         	          for (i in 1:length(objList)) {
-         	          	cat(format(names(objList)[i], width = wid))
-#        	          	print(object.size(get(names(objList)[i])), units = "auto") #class built-in method, messy
-         	          	printUnit(objList[i]) #self-defined method, exact match for PS eg
-         	          }
-                  }
+# print out file size according to auto-match units
+printUnit <- function (obj) { 
+            	units = c("", "k", "M", "G")
+            	i = 1; while (obj >= 1024) { obj = obj / 1024; i = i + 1;} # get proper units
+            	if (i == 1) { 
+            		cat(format(obj,width = digit,justify = 'right'),"\n",sep = "") 
+            	}
+            	else { 
+            		cat(format(as.integer(obj),width = digit - 1,justify = 'right'),units[i],"\n",sep = "") 
+            	}
+            }
+# print out the object list nicely           
+printObj <- function (objList, objName, pretty) { 
+            	cat(format("object",width = wid),format("bytes",width = digit,justify = 'right'),"\n",sep = "")
+            	if (pretty == FALSE) {
+            		sapply(1:length(objList),
+            			function(i){cat(format(objName[i],width=wid),format(objList[i],width=digit,justify='right'),"\n",sep="")})
+            	}
+            	else{
+            		sapply(1:length(objList),
+            			function(i){cat(format(names(objList)[i], width = wid));printUnit(objList[i])})
+            	}
+            }
 
 
 # Main Func:
 lsObj <- function (numls = 100, sizeB = 0, pretty = FALSE) {	
 					listLs <- ls(envir = parent.frame()) # object list
-         	tmp <- sapply(listLs, function(x){object.size(get(x,envir = parent.frame(n = 4)))}) #get all object sizes from in the called frame
-                                                                                              # FUN -> sapply -> lsObj -> call(lsObj) | n=4
-					
-					tmpEnv <- NULL # store object sizes within a certain user-defined ENV
-					nameEnv <- NULL # store the ENV name and object names within ENV
-					tmpFun <- NULL # store object sizes within a function closure
-					nameFun <- NULL # store the FUN name and object names within FUN
-					
-					for (item in listLs){
+         	sizeLs <- sapply(listLs, 
+         	       	  function(x){object.size(get(x,envir = parent.frame(n = 4)))}) # get all object sizes from in the called frame
+                                                                                  # FUN -> sapply -> lsObj -> call(lsObj) | n=4
+
+					tmpEnv <- NULL; nameEnv <- NULL # store object sizes and names within a certain user-defined ENV
+					tmpFun <- NULL; nameFun <- NULL # store object sizes and names within a function closure
+					for (item in listLs){ # elborate objects to find hidden ones
 					  objitem <- get(item, envir = parent.frame())
-						if (is.environment(objitem)) { # get user-defined ENV
-							listEnv <- ls(envir = objitem)
-							for (tmpItem in listEnv) { # objects in user-defined ENV
-                 tmpEnv <- c(tmpEnv, object.size(get(tmpItem,envir = objitem)))
-							}
-							nameEnv <- c(nameEnv, paste(item,"$",listEnv,sep = ""))
+					  # get user-defined ENV
+						if (is.environment(objitem)) { 
+							tt <- sapply(ls(envir = objitem), 
+							             function(x){object.size(get(x,envir = objitem))})
+							tmpEnv <- c(tmpEnv,tt) 
+							nameEnv <- c(nameEnv, paste(item,"$",ls(envir = objitem),sep = ""))
 						}
-						if (is.function(objitem) && identical(environment(objitem), parent.frame())== FALSE ){ # get FUN closure
-							listFun <- ls(envir = environment(objitem))
-							for (tmpItem in listFun) { # objects in FUN closure
-								tmpFun <- c(tmpFun, object.size(get(tmpItem,envir = environment(objitem))))
-							}
-							nameFun <- c(nameFun, paste(item,"$",listFun,sep = ""))
+						# get FUN closure
+						if (is.function(objitem) && identical(environment(objitem), parent.frame())== FALSE ){ 
+							tt <- sapply(ls(envir = environment(objitem)), 
+							             function(x){object.size(get(x,envir = environment(objitem)))})
+							tmpFun <- c(tmpFun,tt)
+							nameFun <- c(nameFun, paste(item,"$",ls(envir = environment(objitem)),sep = ""))
 						}
 					}
-					names(tmpEnv) <- nameEnv
-					names(tmpFun) <- nameFun
-					
-         	if (length(tmpEnv) > 0) { tmp <- c(tmp,tmpEnv) } #if there is use-defined ENV
-        	if (length(tmpFun) > 0) { tmp <- c(tmp,tmpFun) } #if there is FUN closure
-         	tmp <- tmp[tmp[] > sizeB] # find objects larger than sizeB(bytes)
-         	if (numls > length(tmp)) { numls = length(tmp) }
-         	tmp <- sort(tmp, decreasing = TRUE)[1:numls] # find the numls largest objects
+					names(tmpEnv) <- nameEnv; names(tmpFun) <- nameFun
+         	if (length(tmpEnv) > 0) { sizeLs <- c(sizeLs,tmpEnv) } #if there is use-defined ENV
+        	if (length(tmpFun) > 0) { sizeLs <- c(sizeLs,tmpFun) } #if there is FUN closure
          	
-         	if (pretty == TRUE) { printObjPretty(tmp) } # print PRETTY
-         	else { printObj(tmp) }
+         	sizeLs <- sizeLs[sizeLs[] > sizeB] # find objects larger than sizeB(bytes)
+         	if (numls > length(sizeLs)) { numls = length(sizeLs) }
+         	sizeLs <- sort(sizeLs, decreasing = TRUE)[1:numls] # find the numls largest objects
+         	nameLs <- names(sizeLs) # get the name of vector
+
+          printObj(sizeLs,nameLs,pretty)
          }
 
 
 
 #### Test case
-cat("**********Test Case 1*************\nlsObj(5,64)\n")
-lsObj(5,64)
-cat("**********Test Case 2*************\nlsObj(sizeB = 1000)\n")
-lsObj(sizeB = 1000)
+cat("**********Test Case 1*************\nlsObj(5,128)\n")
+lsObj(5,128)
+cat("**********Test Case 2*************\nlsObj(sizeB = 1024)\n")
+lsObj(sizeB = 1024)
 cat("**********Test Case 3*************\nlsObj(numls = 3)\n")
 lsObj(numls = 3)
 cat("**********Test Case 4*************\nlsObj(pretty = TRUE)\n")
