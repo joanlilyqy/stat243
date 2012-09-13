@@ -1,5 +1,5 @@
 alias "ema"="emacs -nw"
-
+alias "ls"="ls -l"
 
 function knitpdf () {
     # knit file in R
