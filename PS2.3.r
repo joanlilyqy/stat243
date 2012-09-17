@@ -10,7 +10,7 @@ setwd("./html")
 # Download all html files
 #system("wget -q -O 'index_pres.html' 'http://www.presidency.ucsb.edu/sou.php#axzz265cEKp1a'")
 #system("fromdos index_pres.html")
-index.pres <- readLines('index_pres.html')
+index.pres <- readLines('index_pres.html',warn=FALSE)
 # get speech text source
 patTxt <- '\\s{16}<td width=\\"\\d{2}\\" align=\\"center\\" class=\\"doclist\\"><a href=\\"'
 index.pres <- index.pres[grep(patTxt,index.pres,perl = TRUE)]
@@ -20,6 +20,7 @@ index.pres <- sapply(index.pres, function(x){gsub(patTxt2,"",x)},USE.NAMES = FAL
 # get file id from the source url
 patUrl <- 'http:\\/\\/www\\.presidency\\.ucsb\\.edu\\/ws\\/index\\.php\\?pid='
 fileid <- sapply(index.pres, function(x){gsub(patUrl,"",x)},USE.NAMES = FALSE)
+print(fileid)
 fileid <- sapply(fileid, function(x){paste(x,".html",sep="")})
 # download all files and convert to unix
 #sapply(1:length(fileid),
@@ -28,7 +29,7 @@ fileid <- sapply(fileid, function(x){paste(x,".html",sep="")})
 
 # one case for test OR test all files
 #ff <- readLines('44541.html')
-ff <- sapply(fileid, function(x){readLines(x)})
+ff <- sapply(fileid, function(x){readLines(x, warn=FALSE)})
 
 # get the president name
 patName <- "^<title>(.*)<\\/title>"
@@ -41,11 +42,18 @@ date.talk <- ff[grep(patDate,ff,perl = TRUE)]
 date.talk <- sapply(date.talk, function(x){gsub(patDate,"\\1",x)},USE.NAMES = FALSE)
 date.talk <- sapply(date.talk, function(x){gsub("^.*\\s","",x)},USE.NAMES = FALSE)
 # get the speech content text
-patText <- '^\\s{3}<.*><span class=\\"displaytext\\">(.*)<\\/span><.*><.*><i.*>'
+patText <- '^\\s{3}<.*><span class=\\"displaytext\\">(.*)<\\/span>.*<span.*<\\/span><.*>$'
 speechVec <- ff[grep(patText,ff,perl = TRUE)]
-speechVec <- sapply(speechVec, function(x){gsub(patText,"\\1<p>",x)},USE.NAMES = FALSE)
+speechVec <- sapply(speechVec, function(x){gsub(patText,"\\1",x)},USE.NAMES = FALSE)
+patText2 <- '(.*)<div align.*<\\/div>'
+speechVec <- sapply(speechVec, function(x){gsub(patText2,"\\1<p>",x)},USE.NAMES=FALSE)
+# problem with ending <br>
+talk.len <- sapply(speechVec, function(x){nchar(as.character(x))},USE.NAMES=FALSE)
+
 
 #debug
+#print(name.pres)
+#print(date.talk)
 #cat(length(name.pres)," names\n",head(name.pres),"\n")
 #cat(length(date.talk)," dates\n",head(date.talk),"\n")
 #cat(length(speechVec)," speeches\n")
@@ -55,10 +63,13 @@ speechVec <- sapply(speechVec, function(x){gsub(patText,"\\1<p>",x)},USE.NAMES =
 #  print(i)
 #  print(grep(patText,ff,perl = TRUE))
 #}
+print(talk.len)
+
 
 patTag <- '\\[<i>(\\w*)<\\/i>\\]'
 getNum <- function(x) {
-          if (gregexpr(patTag,x,perl=TRUE)[[1]] == -1){ return(0) }
+          if (length(gregexpr(patTag,x,perl=TRUE)[[1]]) == 1 &&
+              gregexpr(patTag,x,perl=TRUE)[[1]] == -1)         { return(0) }
           else { return(length(gregexpr(patTag,x,perl=TRUE)[[1]]))}
           }
 getStr <- function(i){
@@ -69,15 +80,19 @@ tagNum <- sapply(speechVec, getNum,USE.NAMES=FALSE)
 tagIdx <- lapply(speechVec, function(x){return(gregexpr(patTag,x,perl=TRUE)[[1]])})
 tagStr <- sapply(1:length(speechVec),getStr)
 
-#print(tagNum)
-#print(head(tagStr))
+print(tagNum)
+# problem with no <i> for the tags
+print(tagStr[1:25])
 
 speechVec <- sapply(speechVec, function(x){iconv(x,from="WINDOWS-1251",to="UTF-8")})
 speechVec <- sapply(speechVec, function(x){gsub(patTag,"",x,perl=TRUE)},USE.NAMES=FALSE)
 speechVec <- sapply(speechVec, function(x){gsub("<p>","\n",x)},USE.NAMES=FALSE)
 # still have html special char
 
-cat(speechVec[2])
+#sapply(speechVec, function (x){cat("START\n\n",x,"\n\n\n\n\nEND\n\n")}, USE.NAMES=FALSE)
+
+
+
 
 setwd("../")
 #system("rm -rf html")
