@@ -9,7 +9,9 @@ load('IPs.RData') # import text data
 #patIP <- "([[:digit:]]{1,3}\\.){3}[[:digit:]]{1,3}" #POXIS sytle pattern for IP
 patIP <- "((\\d{1,3}\\.){3}\\d{1,3})" #Perl style pattern for IP
 
-getIPnum <- function (t) { return (length(gregexpr(patIP,t,perl=TRUE)[[1]])) } # get # of IPs per text element
+getIPnum <- function (t) { if (gregexpr(patIP,t,perl=TRUE)[[1]] == -1) {return (0)}
+                           else {return (length(gregexpr(patIP,t,perl=TRUE)[[1]]))}
+                         } # get # of IPs per text element
 getIPidx <- function (t) { return (gregexpr(patIP,t,perl=TRUE)[[1]]) } # get index of IPs in text element
 getIPsub <- function (i) { return (substring(text[i],ipIdx[[i]],ipIdx[[i]]+attr(ipIdx[[i]],"match.length")-1))} # use idx to get IP strings
 
