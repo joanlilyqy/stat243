@@ -27,142 +27,156 @@
 
 
 \begin{document}
-
+%% begin.rcode echo=FALSE
+%% rm(list=ls(all=TRUE)) #remove all objects
+%% end.rcode
 \section*{Problem 1}
 
+To have a function that lists the objects in the workspace in a nicely formatted manner, serveral auxiliary 
+printing function (\textit{printObj}, \textit{printUnit}) is created first for cleaner coding. 
 
-1. Write an R function that lists the objects in your workspace, ordered by size from largest to smallest,
-in a nicely formatted manner. For clean code, you may need to write auxiliary functions that are called
-by your main function.
-(a) Your function should allow the user to either specify how many objects to list or to specify that
-all objects larger than a certain size be listed. By default, it should do something sensible.
-(b) Your function should include an argument, called ¡¯pretty¡¯, that when TRUE results in the size
-of the objects being printed with the units used tailored to the size of the object. When FALSE,
-all sizes should be in bytes, but still nicely formatted. Here¡¯s an example of part of the desired
-output of pretty = TRUE:
-object bytes
-y 763M
-Onomatopoeia 234k
-z 30k
-z 128
-x2 96
-1
-(c) When called from within another function, your function should work and should print out only
-objects in the frame of that function call.
-
-
-(d) Extra credit: Sometimes user-created objects can be hidden from view. Two examples are objects
-within user-created environments and objects within something called a closure.
-x <- rnorm(100000)
-e <- new.env(); e$a <- x # an object hidden in an environment
-myFun <- with(list( data = x ), # an object hidden in a closure
-function(theta) {
-dist <- rdist(data)
-return(exp(dist / theta))
-})
-The closure is a way to associate data with a function so that it doesn¡¯t have to get passed in as
-an argument.
-Task: Make sure that your function can handle both these cases - i.e., that objects within environments
-or closures are included in the output. The environment() and is.environment() functions
-are likely to be helpful.
-
-To create objects of various sizes for testing, I usually just generate vectors of
-random normals of different lengths, remembering that a vector of numerics has 8 bytes per element.
-
-\subsection*{(a)}
-
-To 
-\textit{wget} 
-
-
-%% begin.rcode PS21-cache, cache=TRUE
-
-
-
-
-
+%% begin.rcode PS21-print, cache=TRUE, results="hide"
+%%## Aux Printing Fun:
+%%## Define printing control global parameter
+%%wid = 20		# object name priting width
+%%digit = 10	# byte size printing digits
+%%## Print out file size according to auto-match units
+%%printUnit <- function (obj) { 
+%%            	units = c("", "k", "M", "G")
+%%            	i = 1; while (obj >= 1024) { obj = obj / 1024; i = i + 1;} # get proper units
+%%            	if (i == 1) { cat(format(obj,width = digit,justify = 'right'),"\n",sep = "") }
+%%            	else { cat(format(as.integer(obj),width = digit - 1,justify = 'right'),units[i],"\n",sep = "") }
+%%            }
+%%## Print out the object list in a nicely formatted way																
+%%printObj <- function (objList, objName, pretty) { 
+%%            	cat(format("object",width = wid),format("bytes",width = digit,justify = 'right'),"\n",sep = "")
+%%            	if (pretty == FALSE){ # pretty==TRUE: it will call the printUnit to print out proper units for sizes	
+%%								t<-sapply(1:length(objList),function(i){cat(format(objName[i],width=wid),format(objList[i],width=digit,justify='right'),"\n",sep="")})}
+%%            	else{ # default:      it will just print out number of bytes	
+%%                t<-sapply(1:length(objList),function(i){cat(format(names(objList)[i], width = wid));printUnit(objList[i])})}
+%%            }
 %% end.rcode
 
+The main function will list objects ordered by size from largest to smallest; it allows the user to 
+either specify how many objects to list or to specify that objects larger than a certain size 
+to be listed. The argument \textit{pretty}, when TRUE, results in the size of the objects being printed 
+with the units tailored by function \textit{printUnit}.
+By default, \textit{lsObj<-function(numls=100, sizeB=0, pretty=FALSE)} 
+will give sensible results.	
+Also, the main function shown below is already written to be able to print out only
+objects in the frame of the function call when called from within another function.
 
-With pre-processing using \textit{sed} commands given, we can then \textit{cut} the fields and
-\textit{sort} according to total contributions by printing the top 5 with \textit{head}.
-
-\begin{lstlisting}
-
-\end{lstlisting}
-
-\subsection*{(b)}
-
-After downloading the files, we \textit{unzip} to get the \textit{*.txt} files. With stored \textit{PCID},
-we can extract the number of contributions for a given candidate. This part of work is focused on the current
-candidates for presidential race year 2012.
-
-\begin{lstlisting}
-
-\end{lstlisting}
-
-\subsection*{(c)}
-
-We functionalize the shell commands in (b) to get results for multiple candidates. A file of candidates names is generated for testing the functions.
-
-\begin{lstlisting}
-
-
-\end{lstlisting}
-
-The loop-to-loop calling of the functions for multiple predefined candidates is realized with \textit{for...do...done}.
-
-\begin{lstlisting}
-
-\end{lstlisting}
-
-\subsection*{Shell script running results}
-
-
-
+\newpage
+%% begin.rcode PS21-main, cache=TRUE, results="hide"
+%%lsObj <- function (numls = 100, sizeB = 0, pretty = FALSE) {	
+%%					listLs <- ls(envir = parent.frame()) # object list
+%%         	sizeLs <- sapply(listLs,function(x){object.size(get(x,envir = parent.frame(n = 4)))}) 
+%%         	# get all object sizes from within the called frame; n=4:FUN->sapply->lsObj->call(lsObj)
+%%					tmpEnv <- NULL; nameEnv <- NULL # store object sizes and names within a certain user-defined ENV
+%%					tmpFun <- NULL; nameFun <- NULL # store object sizes and names within a function closure
+%%					for (item in listLs){ # elborate objects to find hidden ones
+%%					  objitem <- get(item, envir = parent.frame())
+%%						if (is.environment(objitem)) { # get sizes and store names with ENV prefix
+%%							tt <- sapply(ls(envir = objitem), function(x){object.size(get(x,envir = objitem))})
+%%							tmpEnv <- c(tmpEnv,tt); nameEnv <- c(nameEnv, paste(item,"$",ls(envir = objitem),sep = ""))
+%%						}
+%%						if (is.function(objitem) && identical(environment(objitem), parent.frame())== FALSE ){ # get sizes and store names with FUN prefix
+%%							tt <- sapply(ls(envir = environment(objitem)), function(x){object.size(get(x,envir = environment(objitem)))})
+%%							tmpFun <- c(tmpFun,tt); nameFun <- c(nameFun, paste(item,"$",ls(envir = environment(objitem)),sep = ""))
+%%						}
+%%					}
+%%					names(tmpEnv) <- nameEnv; names(tmpFun) <- nameFun
+%%         	if (length(tmpEnv) > 0) { sizeLs <- c(sizeLs,tmpEnv) } #if there is use-defined ENV
+%%        	if (length(tmpFun) > 0) { sizeLs <- c(sizeLs,tmpFun) } #if there is FUN closure
+%%         	sizeLs <- sizeLs[sizeLs[] > sizeB] # find objects larger than sizeB(bytes)
+%%         	if (numls > length(sizeLs)) { numls = length(sizeLs) } #prune incorrect listing number
+%%         	sizeLs <- sort(sizeLs, decreasing = TRUE)[1:numls] # find the numls largest objects
+%%         	nameLs <- names(sizeLs) # get the name of vector
+%%          printObj(sizeLs,nameLs,pretty) # print using the aux functions
+%%         }
+%% end.rcode
 
 \newpage
 
-\section*{Problem 2}
-\subsection*{(a)}
-
-The shell function \textit{remoteRJobs} is realized with \textit{ps} remotely after \textit{ssh} to the
-specified machine. The jobs are sorted according to CPU usage percentage and will be displayed with the given number of lines. The default is to display all the jobs.
-
-\begin{lstlisting}
-
-\end{lstlisting}
+The above main function has the capability to deal with user-created environments and objects within a closure.
+It elborates the objects obtained from the \textit{ls()} function to see if there are user-defined ENV or FUN closure.
+When detected, it then goes one frame down to the enclosing environment to get the hidden objects and assign names to
+them with ENV/FUN prefix.
 
 
-\subsection*{(b)}
-
-For extra function on the \textit{remoteRJobs}, the 2.0 version utilizes a \textit{mysum} function for summing up the CPU and MEM usage. The calculation is done purely in shell without porting to R. Also the total CPU usage is averaged to the number of cores on the given remote machine, while the MEM usage is just simple sum up.
-
-\begin{lstlisting}
-
-}
-\end{lstlisting}
-
-\subsection*{Shell script running results}
+To create objects of various sizes for testing, I generated vectors of random normals of different lengths, 
+along with serveral hidden ENV/FUN examples for testing.
 
 
-
-
-\newpage
-
-\section*{Problem 3}
-
-Crime rates in the US are high compared to European countries. Here I `analyze' the variation in murder across US states using R. I show a histogram of rates of arrest for murder for the 50 states and find the states with the lowest and highest murder arrest rates.
-
-%% begin.rcode arrest-hist, dev='cairo_pdf', fig.width=5, fig.height=5, out.width='.8\\textwidth'
-% hist(USArrests$Murder)
+%% begin.rcode PS21-test0, cache=TRUE, eval=FALSE, results="hide"
+%%#### Generate objects test cases
+%%ob0 <- rnorm(1);ob1 <- rnorm(10);ob2 <- rnorm(100);ob3 <- rnorm(1000);ob4 <- rnorm(10000);ob5 <- rnorm(100000)
+%%ob6 <- rnorm(1000000);ob7 <- rnorm(10000000)
 %% end.rcode
 
-%% begin.rcode arrest-cache, cache=TRUE
-% lowHi <- c(which.min(USArrests$Murder), which.max(USArrests$Murder))
-% attributes(USArrests)$row.names[lowHi]
+%% begin.rcode PS21-test1, cache=TRUE, echo=FALSE, results="markup"
+%%#### Generate objects test cases
+%%ob0 <- rnorm(1);ob1 <- rnorm(10);ob2 <- rnorm(100);ob3 <- rnorm(1000);ob4 <- rnorm(10000);ob5 <- rnorm(100000)
+%%ob6 <- rnorm(1000000);ob7 <- rnorm(10000000)
+%%#### Test case
+%%cat("**********Test Case 1*************\nlsObj(5,128)\n")
+%%lsObj(5,128)
+%%cat("**********Test Case 2*************\nlsObj(sizeB = 1024)\n")
+%%lsObj(sizeB = 1024)
+%%cat("**********Test Case 3*************\nlsObj(numls = 3)\n")
+%%lsObj(numls = 3)
+%%cat("**********Test Case 4*************\nlsObj(pretty = TRUE)\n")
+%%lsObj(pretty = TRUE)
 %% end.rcode
 
-The state with the lowest rate is \rinline{attributes(USArrests)$row.names[which.min(USArrests$Murder)]}. The state with the highest rate is \rinline{attributes(USArrests)$row.names[which.max(USArrests$Murder)]}.
+%% begin.rcode PS21-test2, cache=TRUE, eval=FALSE, results="hide"
+%%testFunc <- function () {
+%%            	data <- rnorm(10000);	data2 <- rnorm(100000)
+%%            	myFun <- function(theta) { 
+%%                       dist <- rnorm(theta); return(exp(dist / theta)); }
+%%	lsObj()}
+%%testEx <- function () {
+%%          	x <- rnorm(100000);	data <- rnorm(1000)
+%%          	e <- new.env(); e$a <- x # an object hidden in an environment
+%%          	e2 <- new.env(); e2$a2 <- x; e2$b2 <- 52
+%%          	myFun <- function(theta) { 
+%%                     dist <- rnorm(theta); return(exp(dist / theta)); }
+%%          	myFun1 <- function(theta) { 
+%%                      dist <- rnorm(theta); return(exp(dist / theta)); }
+%%          	myFun2 <- with(list( data = x ), # an object hidden in a closure
+%%                          function(theta) { 
+%%                          dist <- rdist(data); return(exp(dist / theta)); } )
+%%            myFun3 <- with(list( data2 = x ),
+%%                          function(theta2) { 
+%%                          dist <- rdist(data); return(exp(dist / theta2)); } )
+%%	lsObj()}
+%% end.rcode
+
+%% begin.rcode PS21-test3, cache=TRUE, echo=FALSE, results="markup"
+%%cat("**********Test Case 5*************\nlsObj() in testFunc()\n")
+%%testFunc <- function () {
+%%            	data <- rnorm(10000)
+%%            	data2 <- rnorm(100000)
+%%            	myFun <- function(theta) { dist <- rnorm(theta); return(exp(dist / theta)); }
+%%	lsObj()
+%%}
+%%testFunc()
+%%cat("**********Test Case 6*************\nlsObj() in test testEx()\n")
+%%testEx <- function () {
+%%          	x <- rnorm(100000)
+%%          	data <- rnorm(1000)
+%%          	e <- new.env(); e$a <- x # an object hidden in an environment
+%%          	e2 <- new.env(); e2$a2 <- x; e2$b2 <- 52
+%%          	myFun <- function(theta) { dist <- rnorm(theta); return(exp(dist / theta)); }
+%%          	myFun1 <- function(theta) { dist <- rnorm(theta); return(exp(dist / theta)); }
+%%          	myFun2 <- with(list( data = x ), # an object hidden in a closure
+%%                          function(theta) { dist <- rdist(data); return(exp(dist / theta)); } )
+%%            myFun3 <- with(list( data2 = x ),
+%%                          function(theta2) { dist <- rdist(data); return(exp(dist / theta2)); } )
+%%	lsObj()
+%%}
+%%testEx()
+%% end.rcode
+
 
 \end{document}

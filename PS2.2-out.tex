@@ -1,0 +1,184 @@
+\documentclass{article}\usepackage{graphicx, color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\definecolor{fgcolor}{rgb}{0.2, 0.2, 0.2}
+\newcommand{\hlnumber}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlfunctioncall}[1]{\textcolor[rgb]{0.501960784313725,0,0.329411764705882}{\textbf{#1}}}%
+\newcommand{\hlstring}[1]{\textcolor[rgb]{0.6,0.6,1}{#1}}%
+\newcommand{\hlkeyword}[1]{\textcolor[rgb]{0,0,0}{\textbf{#1}}}%
+\newcommand{\hlargument}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hlcomment}[1]{\textcolor[rgb]{0.180392156862745,0.6,0.341176470588235}{#1}}%
+\newcommand{\hlroxygencomment}[1]{\textcolor[rgb]{0.43921568627451,0.47843137254902,0.701960784313725}{#1}}%
+\newcommand{\hlformalargs}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hleqformalargs}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hlassignement}[1]{\textcolor[rgb]{0,0,0}{\textbf{#1}}}%
+\newcommand{\hlpackage}[1]{\textcolor[rgb]{0.588235294117647,0.709803921568627,0.145098039215686}{#1}}%
+\newcommand{\hlslot}[1]{\textit{#1}}%
+\newcommand{\hlsymbol}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlprompt}[1]{\textcolor[rgb]{0.2,0.2,0.2}{#1}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{\today}
+\chead{Ying Qiao SID:21412301}
+\rhead{Stat243 Fa12: Problem Set 2}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+
+%% for inline R code: if the inline code is not correctly parsed, you will see a message
+\newcommand{\rinline}[1]{SOMETHING WORNG WITH knitr}
+
+
+
+
+\begin{document}
+
+
+\section*{Problem 2}
+
+After reading in the character vector text from the online traffic logs \textit{IPs.RData}, the 
+code below could extract out all the IP numbers. In the meanwhile, it can determine how many IP 
+addresses are in each element of the vector with function \textit{getIPnum}.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+patIP <- \hlstring{"((\textbackslash{}\textbackslash{}d\{1,3\}\textbackslash{}\textbackslash{}.)\{3\}\textbackslash{}\textbackslash{}d\{1,3\})"}  #Perl style pattern for IP
+getIPnum <- \hlfunctioncall{function}(t) \{
+    \hlfunctioncall{if} (\hlfunctioncall{length}(\hlfunctioncall{grep}(patIP, t, perl = TRUE)) == 0) \{
+        \hlfunctioncall{return}(0)
+    \} else \{
+        \hlfunctioncall{return}(\hlfunctioncall{length}(\hlfunctioncall{gregexpr}(patIP, t, perl = TRUE)[[1]]))
+    \}
+\}  \hlcomment{# get number of IPs per text element}
+getIPidx <- \hlfunctioncall{function}(t) \{
+    \hlfunctioncall{return}(\hlfunctioncall{gregexpr}(patIP, t, perl = TRUE)[[1]])
+\}  \hlcomment{# get index of IPs in text element}
+getIPsub <- \hlfunctioncall{function}(i) \{
+    \hlfunctioncall{return}(\hlfunctioncall{substring}(text[i], ipIdx[[i]], ipIdx[[i]] + \hlfunctioncall{attr}(ipIdx[[i]], \hlstring{"match.length"}) - 
+        1))
+\}  \hlcomment{# use idx to get IP strings}
+ipNum <- \hlfunctioncall{sapply}(text, getIPnum, USE.NAMES = FALSE)  \hlcomment{# apply to the character vector}
+ipIdx <- \hlfunctioncall{lapply}(text, getIPidx)  \hlcomment{# maintain list structure of index for each IP log}
+ipStr <- \hlfunctioncall{sapply}(1:\hlfunctioncall{length}(text), getIPsub)
+\hlcomment{# obtain IPs in list; multiple IPs per element stored in list items}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+The results of getting the number of IPs within one element of \textit{text} is one integer vector of 
+the length \textit{length(text)}. All the extracted IPs are stored in the list \textit{ipStr}, 
+with each element of a character vector in length \textit{ipNum[i]} of all the IPs from line \textit{text[i]}.
+NA or no-IP results are treated as empty string.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## The results of # of IPs in each text element (1:100):
+
+##   [1] 1 0 1 0 2 1 0 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 0 0 0 0 1 0 1 1 1 0 0 1 1
+##  [36] 2 1 1 1 1 1 0 0 0 1 2 0 0 1 0 1 1 1 1 1 1 1 1 1 1 2 0 1 0 0 1 0 0 0 0
+##  [71] 0 2 1 1 0 1 1 1 0 0 1 0 1 1 0 1 2 1 1 2 1 0 1 0 1 1 1 1 1 1
+
+## The first 10 lines of results:
+
+## $`from munnari.OZ.AU (localhost [127.0.0.1]) by delta.cs.mu.OZ.AU
+## (8.11.6/8.11.6) with ESMTP id g7MBQPW13260; Thu, 22 Aug 2002 18:26:25
+## +0700 (ICT)`
+## [1] "127.0.0.1"
+## 
+## $`from SpoolDir by EMS-SRV0 (Mercury 1.44); 22 Aug 02 14:50:31 +0000`
+## [1] ""
+## 
+## $`from ee.ed.ac.uk (sxs@dunblane [129.215.34.86]) by
+## postbox.ee.ed.ac.uk (8.11.0/8.11.0) with ESMTP id g7ME1Li02942 for
+## <forteana@yahoogroups.com>; Thu, 22 Aug 2002 15:01:21 +0100 (BST)`
+## [1] "129.215.34.86"
+## 
+## $`from SpoolDir by EMS-SRV0 (Mercury 1.44); 22 Aug 02 15:01:34 +0000`
+## [1] ""
+## 
+## $`from [192.168.0.4] (chello062178142216.4.14.vie.surfer.at
+## [62.178.142.216]) (authenticated bits=0) by mail.uptime.at (8.12.5/8.12.5)
+## with ESMTP id g7MEI7Vp022036 for
+## <spamassassin-devel@lists.sourceforge.net>; Thu, 22 Aug 2002 16:18:07
+## +0200`
+## [1] "192.168.0.4"    "62.178.142.216"
+## 
+## $`from m206-56.dsl.tsoft.com ([198.144.206.56] helo=perkel.com) by
+## darwin.ctyme.com with asmtp (TLSv1:RC4-MD5:128) (Exim 3.35 #1) id
+## 17htgP-0004te-00; Thu, 22 Aug 2002 08:15:37 -0700`
+## [1] "198.144.206.56"
+## 
+## $`by jlooney.jinny.ie (Postfix, from userid 500) id 4F57189D;
+## Thu, 22 Aug 2002 16:25:45 +0100 (IST)`
+## [1] ""
+## 
+## $`from dcu.ie (136.206.21.115) by hawk.dcu.ie (6.0.040) id
+## 3D6203D3000136AD for iiu@taint.org; Thu, 22 Aug 2002 16:59:17 +0100`
+## [1] "136.206.21.115"
+## 
+## $`from [66.218.67.174] by n19.grp.scd.yahoo.com with NNFMP;
+## 22 Aug 2002 16:11:27 -0000`
+## [1] "66.218.67.174"
+## 
+## $`from [66.218.67.189] by n10.grp.scd.yahoo.com with NNFMP;
+## 22 Aug 2002 16:17:40 -0000`
+## [1] "66.218.67.189"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+
+\end{document}

@@ -27,142 +27,51 @@
 
 
 \begin{document}
-
-\section*{Problem 1}
-
-
-1. Write an R function that lists the objects in your workspace, ordered by size from largest to smallest,
-in a nicely formatted manner. For clean code, you may need to write auxiliary functions that are called
-by your main function.
-(a) Your function should allow the user to either specify how many objects to list or to specify that
-all objects larger than a certain size be listed. By default, it should do something sensible.
-(b) Your function should include an argument, called ¡¯pretty¡¯, that when TRUE results in the size
-of the objects being printed with the units used tailored to the size of the object. When FALSE,
-all sizes should be in bytes, but still nicely formatted. Here¡¯s an example of part of the desired
-output of pretty = TRUE:
-object bytes
-y 763M
-Onomatopoeia 234k
-z 30k
-z 128
-x2 96
-1
-(c) When called from within another function, your function should work and should print out only
-objects in the frame of that function call.
-
-
-(d) Extra credit: Sometimes user-created objects can be hidden from view. Two examples are objects
-within user-created environments and objects within something called a closure.
-x <- rnorm(100000)
-e <- new.env(); e$a <- x # an object hidden in an environment
-myFun <- with(list( data = x ), # an object hidden in a closure
-function(theta) {
-dist <- rdist(data)
-return(exp(dist / theta))
-})
-The closure is a way to associate data with a function so that it doesn¡¯t have to get passed in as
-an argument.
-Task: Make sure that your function can handle both these cases - i.e., that objects within environments
-or closures are included in the output. The environment() and is.environment() functions
-are likely to be helpful.
-
-To create objects of various sizes for testing, I usually just generate vectors of
-random normals of different lengths, remembering that a vector of numerics has 8 bytes per element.
-
-\subsection*{(a)}
-
-To 
-\textit{wget} 
-
-
-%% begin.rcode PS21-cache, cache=TRUE
-
-
-
-
-
+%% begin.rcode echo=FALSE
+%% rm(list=ls(all=TRUE)) #remove all objects
 %% end.rcode
-
-
-With pre-processing using \textit{sed} commands given, we can then \textit{cut} the fields and
-\textit{sort} according to total contributions by printing the top 5 with \textit{head}.
-
-\begin{lstlisting}
-
-\end{lstlisting}
-
-\subsection*{(b)}
-
-After downloading the files, we \textit{unzip} to get the \textit{*.txt} files. With stored \textit{PCID},
-we can extract the number of contributions for a given candidate. This part of work is focused on the current
-candidates for presidential race year 2012.
-
-\begin{lstlisting}
-
-\end{lstlisting}
-
-\subsection*{(c)}
-
-We functionalize the shell commands in (b) to get results for multiple candidates. A file of candidates names is generated for testing the functions.
-
-\begin{lstlisting}
-
-
-\end{lstlisting}
-
-The loop-to-loop calling of the functions for multiple predefined candidates is realized with \textit{for...do...done}.
-
-\begin{lstlisting}
-
-\end{lstlisting}
-
-\subsection*{Shell script running results}
-
-
-
-
-\newpage
-
 \section*{Problem 2}
-\subsection*{(a)}
 
-The shell function \textit{remoteRJobs} is realized with \textit{ps} remotely after \textit{ssh} to the
-specified machine. The jobs are sorted according to CPU usage percentage and will be displayed with the given number of lines. The default is to display all the jobs.
+After reading in the character vector text from the online traffic logs \textit{IPs.RData}, the 
+code below could extract out all the IP numbers. In the meanwhile, it can determine how many IP 
+addresses are in each element of the vector with function \textit{getIPnum}.
 
-\begin{lstlisting}
-
-\end{lstlisting}
-
-
-\subsection*{(b)}
-
-For extra function on the \textit{remoteRJobs}, the 2.0 version utilizes a \textit{mysum} function for summing up the CPU and MEM usage. The calculation is done purely in shell without porting to R. Also the total CPU usage is averaged to the number of cores on the given remote machine, while the MEM usage is just simple sum up.
-
-\begin{lstlisting}
-
-}
-\end{lstlisting}
-
-\subsection*{Shell script running results}
-
-
-
-
-\newpage
-
-\section*{Problem 3}
-
-Crime rates in the US are high compared to European countries. Here I `analyze' the variation in murder across US states using R. I show a histogram of rates of arrest for murder for the 50 states and find the states with the lowest and highest murder arrest rates.
-
-%% begin.rcode arrest-hist, dev='cairo_pdf', fig.width=5, fig.height=5, out.width='.8\\textwidth'
-% hist(USArrests$Murder)
+%% begin.rcode PS22-regex0, cache=TRUE, eval=FALSE, results="hide"
+%% patIP <- "((\\d{1,3}\\.){3}\\d{1,3})" #Perl style pattern for IP
+%% getIPnum <- function (t) { if (length(grep(patIP,t,perl=TRUE)) == 0) {return (0)}
+%%                           else {return (length(gregexpr(patIP,t,perl=TRUE)[[1]]))}
+%%                         } # get number of IPs per text element
+%% getIPidx <- function (t) { return (gregexpr(patIP,t,perl=TRUE)[[1]]) } # get index of IPs in text element
+%% getIPsub <- function (i) { return (substring(text[i],ipIdx[[i]],ipIdx[[i]]+attr(ipIdx[[i]],"match.length")-1))} # use idx to get IP strings
+%% ipNum <- sapply(text, getIPnum, USE.NAMES = FALSE) # apply to the character vector
+%% ipIdx <- lapply(text, getIPidx) # maintain list structure of index for each IP log
+%% ipStr <- sapply(1:length(text), getIPsub) 
+%% # obtain IPs in list; multiple IPs per element stored in list items
 %% end.rcode
 
-%% begin.rcode arrest-cache, cache=TRUE
-% lowHi <- c(which.min(USArrests$Murder), which.max(USArrests$Murder))
-% attributes(USArrests)$row.names[lowHi]
+The results of getting the number of IPs within one element of \textit{text} is one integer vector of 
+the length \textit{length(text)}. All the extracted IPs are stored in the list \textit{ipStr}, 
+with each element of a character vector in length \textit{ipNum[i]} of all the IPs from line \textit{text[i]}.
+NA or no-IP results are treated as empty string.
+
+%% begin.rcode PS22-regex1, cache=TRUE, echo=FALSE, results="markup"
+%% rm(list=ls(all=TRUE)) # remove all objects
+%% load('IPs.RData') # import text data
+%% patIP <- "((\\d{1,3}\\.){3}\\d{1,3})" #Perl style pattern for IP
+%% getIPnum <- function (t) { if (length(grep(patIP,t,perl=TRUE)) == 0) {return (0)}
+%%                           else {return (length(gregexpr(patIP,t,perl=TRUE)[[1]]))}
+%%                         } # get number of IPs per text element
+%% getIPidx <- function (t) { return (gregexpr(patIP,t,perl=TRUE)[[1]]) } # get index of IPs in text element
+%% getIPsub <- function (i) { return (substring(text[i],ipIdx[[i]],ipIdx[[i]]+attr(ipIdx[[i]],"match.length")-1))} # use idx to get IP strings
+%% ipNum <- sapply(text, getIPnum, USE.NAMES = FALSE) # apply to the character vector
+%% ipIdx <- lapply(text, getIPidx) # maintain list structure of index for each IP log
+%% ipStr <- sapply(1:length(text), getIPsub) 
+%% names(ipStr) <- text
+%% cat("The results of # of IPs in each text element (1:100):\n")
+%% print(ipNum[1:100])
+%% cat("The first 10 lines of results:\n")
+%% print(head(ipStr, n= 10))
 %% end.rcode
 
-The state with the lowest rate is \rinline{attributes(USArrests)$row.names[which.min(USArrests$Murder)]}. The state with the highest rate is \rinline{attributes(USArrests)$row.names[which.max(USArrests$Murder)]}.
 
 \end{document}
