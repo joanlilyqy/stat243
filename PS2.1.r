@@ -35,11 +35,11 @@ printUnit <- function (obj) {
 printObj <- function (objList, objName, pretty) { 
             	cat(format("object",width = wid),format("bytes",width = digit,justify = 'right'),"\n",sep = "")
             	if (pretty == FALSE) {
-            		sapply(1:length(objList),
+            		t<-sapply(1:length(objList),
             			function(i){cat(format(objName[i],width=wid),format(objList[i],width=digit,justify='right'),"\n",sep="")})
             	}
             	else{
-            		sapply(1:length(objList),
+            		t<-sapply(1:length(objList),
             			function(i){cat(format(names(objList)[i], width = wid));printUnit(objList[i])})
             	}
             }

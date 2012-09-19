@@ -4,12 +4,12 @@
 #### 3. President speech analysis
 
 rm(list=ls(all=TRUE)) #remove all objects
-system("mkdir html")
+#system("mkdir html")
 setwd("./html")
 
 # Download all html files
-system("wget -q -O 'index_pres.html' 'http://www.presidency.ucsb.edu/sou.php#axzz265cEKp1a'")
-system("fromdos index_pres.html")
+#system("wget -q -O 'index_pres.html' 'http://www.presidency.ucsb.edu/sou.php#axzz265cEKp1a'")
+#system("fromdos index_pres.html")
 indexPres <- readLines('index_pres.html',warn= FALSE)
 # Get speech text source
 patUrl1 <- '\\s{16}<td width=\\"\\d{2}\\" align=\\"center\\" class=\\"doclist\\"><a href=\\"'
@@ -22,8 +22,8 @@ patUrl3 <- 'http:\\/\\/www\\.presidency\\.ucsb\\.edu\\/ws\\/index\\.php\\?pid='
 fileid <- sapply(indexPres, function(x){gsub(patUrl3,"",x)},USE.NAMES= FALSE)
 # Download all files and convert to unix
 sapply(1:length(fileid),
-       function(i){system(paste("wget -q -O '",fileid[i],"' '",indexPres[i],"'",sep=""));
-                   system(paste("fromdos ",fileid[i],sep=""))})
+       function(i){system(paste("wget -q -O '",fileid[i],".html' '",indexPres[i],"'",sep=""));
+                   system(paste("fromdos ",fileid[i],".html",sep=""))})
 
 ff <- sapply(fileid, function(x){readLines(paste(x,".html",sep=""), warn= FALSE)})
 
@@ -101,7 +101,7 @@ tmpList <- matrix(rep(0, 226*15),nrow=226,ncol=15)
 
 # Speech list with element-wise analysis
 speechList <- list()
-system("wget -q -O 'common_words.txt' 'http://www.textfixer.com/resources/common-english-words.txt'")
+#system("wget -q -O 'common_words.txt' 'http://www.textfixer.com/resources/common-english-words.txt'")
 commonWords <- readLines('common_words.txt', warn= FALSE)
 commonWords <- unlist(strsplit(commonWords, ",", perl= TRUE))
 for (i in 1:length(fileid)) {
@@ -278,4 +278,4 @@ plot(date,listSpeech$dc, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,yla
 
 
 setwd("../")
-system("rm -rf html")
+#system("rm -rf html")
