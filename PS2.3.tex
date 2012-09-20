@@ -130,30 +130,32 @@ are kept as a record for each speech. The \textit{speechVec[i]} will be printed 
 %%          if (length(gregexpr(patLau,x,perl= TRUE)[[1]]) == 1 &&
 %%              gregexpr(patLau,x,perl= TRUE)[[1]] == -1)         { return(0) }
 %%          else { return(length(gregexpr(patLau,x,perl= TRUE)[[1]]))}
-%%          }
+%%          } # get the number of [laughter]
 %%getappNum <- function(x) {
 %%          if (length(gregexpr(patApp,x,perl= TRUE)[[1]]) == 1 &&
 %%              gregexpr(patApp,x,perl= TRUE)[[1]] == -1)         { return(0) }
 %%          else { return(length(gregexpr(patApp,x,perl= TRUE)[[1]]))}
-%%          }
+%%          } # get the number of [applause]
 %%lauNum <- sapply(speechVec, getlauNum, USE.NAMES= FALSE)
 %%appNum <- sapply(speechVec, getappNum, USE.NAMES= FALSE)
 %%speechVec <- sapply(speechVec, function(x){iconv(x,from="WINDOWS-1251",to="UTF-8",sub = " ")})
 %%speechVec <- sapply(speechVec, function(x){x <- gsub(patLau,"",x,perl= TRUE);x <- gsub(patApp,"",x,perl= TRUE)})
-%%names(speechVec) <- NULL
+%%             # remove all the non-verbal tags from the speech text
+%%names(speechVec) <- NULL # clean the speechVec name (otherwise, long and messy)
 %% end.rcode
 
 
 \subsection*{(d)}
 
-The collection of speeches is stored in a clean fashion of list elements. This is easy later for plotting
-variables changes over time.
+The collection of speeches is stored in a clean fashion of list elements. The \textit{i}th entries of all the elements
+in \textit{listSpeech} give information about the \textit{i}th speech. 
+This is easy later for plotting variables changes over time.
 
 %% begin.rcode eval=FALSE
 %%listSpeech <- list()
 %%listSpeech$id <- fileid
 %%listSpeech$name <- namePres
-%%listSpeech$date <- as.integer(dateTalk)
+%%listSpeech$date <- as.integer(dateTalk) # conversion for plotting, sorting
 %%listSpeech$numLaughter <- lauNum
 %%listSpeech$numApplause <- appNum
 %%listSpeech$speech <- speechVec
@@ -168,16 +170,18 @@ character vector. Counts are also done on both words and sentences.
 \newpage
 %% begin.rcode eval=FALSE
 %%# Speech analysis
+%%# Grab words from the speech by replacing all non-word char with space and split
 %%getWords <- function(x){x <- gsub("'","",x, perl= TRUE); x <- gsub('\\W+'," ",x, perl= TRUE);
 %%                        xs <- unlist(strsplit(x, "[ ]+", perl= TRUE));return(xs[xs != ""])}
+%%# Grab sentences from the speech by spliting with ending chars like [.!?]
 %%getSents <- function(x){x <- gsub(" (Mr|Ms|Mrs|Dr|St|Sr|Jr)\\.","\\1",x, perl= TRUE);x <- gsub("[\\.!\\?][ \t]+","\n",x, perl= TRUE);
 %%                        xs <- unlist(strsplit(x, "\n", perl= TRUE));return(xs[xs != ""])}
-%%listSpeech$wc <- sapply(speechVec, function(x){return(length(getWords(x)))}, USE.NAMES= FALSE)
-%%listSpeech$sc <- sapply(speechVec, function(x){return(length(getSents(x)))}, USE.NAMES= FALSE)
-%%listSpeech$wMean <- sapply(speechVec, function(x){return(mean(nchar(getWords(x))))}, USE.NAMES= FALSE)
-%%listSpeech$wSD <- sapply(speechVec, function(x){return(sd(nchar(getWords(x))))}, USE.NAMES= FALSE)
-%%listSpeech$sMean <- sapply(speechVec, function(x){return(mean(nchar(getSents(x))))}, USE.NAMES= FALSE)
-%%listSpeech$sSD <- sapply(speechVec, function(x){return(sd(nchar(getSents(x))))}, USE.NAMES= FALSE)
+%%listSpeech$wc <- sapply(speechVec, function(x){return(length(getWords(x)))}, USE.NAMES= FALSE) # word count
+%%listSpeech$sc <- sapply(speechVec, function(x){return(length(getSents(x)))}, USE.NAMES= FALSE) # sentence count
+%%listSpeech$wMean <- sapply(speechVec, function(x){return(mean(nchar(getWords(x))))}, USE.NAMES= FALSE) #avg word length
+%%listSpeech$wSD <- sapply(speechVec, function(x){return(sd(nchar(getWords(x))))}, USE.NAMES= FALSE) # word length sd
+%%listSpeech$sMean <- sapply(speechVec, function(x){return(mean(nchar(getSents(x))))}, USE.NAMES= FALSE) # avg sentence length
+%%listSpeech$sSD <- sapply(speechVec, function(x){return(sd(nchar(getSents(x))))}, USE.NAMES= FALSE) # sentence length sd
 %% end.rcode
 
 
@@ -186,10 +190,9 @@ character vector. Counts are also done on both words and sentences.
 
 We now start to extract some features of interest from the speeches to analyze how the speeches have
 changed over time. The result of all this is a list with each element containing the information
-about a speech: the speech as a single string, the vector of sentences, the vector of words, the
-word counts, and the additional quantification of variables about the speech from (g) as well as
+about a speech: the speech as a single string, the vector of sentences, the vector of words
+and the additional quantification of variables about the speech from (g) as well as
 the non-verbal variables from (c).
-
 
 \begin{enumerate}
 \item
@@ -203,6 +206,7 @@ quotations in each speech \textit{quoNum,quoMean,quoSD}
 The most common meaningful words, where non-meaningful words are pre-defined \textit{cmw}
 \item
 Counts of the following words or word stems: 
+\scriptsize
 \begin{description}
 \item[I, we]
 \item[America{,n}]
@@ -218,25 +222,27 @@ Counts of the following words or word stems:
 \item[Woman] -- I think would be interesting
 \end{description}
 \end{enumerate}
-
+\normalsize
 
 %% begin.rcode eval=FALSE
 %% tmpList <- matrix(rep(0, 226*15),nrow=226,ncol=15)
 %% ## Speech list with element-wise analysis
 %% speechList <- list() #empty list
-%% system("wget -O 'common_words.txt' 'http://www.textfixer.com/resources/common-english-words.txt'")
-%% commonWords <- readLines('common_words.txt', warn= FALSE)
+%% # Get the non-meaningful words file
+%% system("wget -O 'cmw.txt' 'http://www.textfixer.com/resources/common-english-words.txt'")
+%% commonWords <- readLines('cmw.txt', warn= FALSE)
 %% commonWords <- unlist(strsplit(commonWords, ",", perl= TRUE))
+%% # Element-wise analysis on each speech
 %%for (i in 1:length(fileid)) {
-%%	ss <- list()
-%%	# Global attr
+%%	ss <- list() #empty list element
+%%	# Global attributes: from results before (reproduce for better storage)
 %%	ss$id <- fileid[i]
 %%	ss$name <- namePres[i]
 %%	ss$date <- as.integer(dateTalk[i])
 %%	ss$numLaughter <- lauNum[i]
 %%	ss$numApplause <- appNum[i]
 %%	ss$speech <- speechVec[i]	
-%%	# Indiv attr
+%%	# Indiv attributes: get from within each speech
 %%	talkWords <- getWords(speechVec[i]) 
 %%	talkSents <- getSents(speechVec[i])
 %%	ss$words <- talkWords # words vector
@@ -249,7 +255,7 @@ Counts of the following words or word stems:
 %%	ss$sSD <- sd(nchar(talkSents)) # sentence length sd; ss[14]
 %%	patQuo <- '\"(.*?)\"' # quotation pattern
 %%	quo <- talkSents[grep(patQuo,talkSents,perl= TRUE)]
-%%	if (length(quo) != 0) { # get quotation attr
+%%	if (length(quo) != 0) { # get quotation attributes
 %%		quo <- sapply(quo, function(x){gsub(patQuo,"\\1",x)},USE.NAMES= FALSE)
 %%		ss$quoNum <- length(quo)
 %%		ss$quoMean <- mean(nchar(quo))
@@ -265,13 +271,13 @@ Counts of the following words or word stems:
 %%	cmw <- cmw[which(!(names(cmw) %in% commonWords))] # get meaningful words
 %%	ss$cmw <- cmw[cmw >= 10] #arbitrary cut-off for display
 %%	ss$strIwe <- cmw[grep("^(I|[Ww]e)$",names(cmw))] #string 'I|We'; ss[19]
-%%	ss$strAme <- cmw[grep("[Aa]merica(|n)",names(cmw))]
-%%	ss$strDem <- cmw[grep("[Dd]emocra(cy|tic)",names(cmw))]
-%%	ss$strRep <- cmw[grep("[Rr]epublic(|n)",names(cmw))]
-%%	ss$strFree <- cmw[grep("^[Ff]ree(|dom)$",names(cmw))]
-%%	ss$strWar <- cmw[grep("^[Ww]ar(|s)$",names(cmw))]
-%%	ss$strGod <- cmw[grep("^[Gg]od(|s)$",names(cmw))]
-%%	ss$strChr <- cmw[grep("(Jesus|Christ|Christian)",names(cmw))]
+%%	ss$strAme <- cmw[grep("[Aa]merica(|n)",names(cmw))] #string 'America'
+%%	ss$strDem <- cmw[grep("[Dd]emocra(cy|tic)",names(cmw))] #string 'democratic'
+%%	ss$strRep <- cmw[grep("[Rr]epublic(|n)",names(cmw))] #string 'republican'
+%%	ss$strFree <- cmw[grep("^[Ff]ree(|dom)$",names(cmw))] #string 'free'
+%%	ss$strWar <- cmw[grep("^[Ww]ar(|s)$",names(cmw))] #string 'war'
+%%	ss$strGod <- cmw[grep("^[Gg]od(|s)$",names(cmw))] #string 'God'
+%%	ss$strChr <- cmw[grep("(Jesus|Christ|Christian)",names(cmw))] #string 'Chirst|Jesus'
 %%	ss$strWoman <- cmw[grep("^[Ww]om[ae]n$",names(cmw))] #Mystring 'Woman'; ss[27]	
 %%	ssGodBless <- talkSents[grep("[Gg]od [Bb]less",talkSents, perl= TRUE)]
 %%	if (length(ssGodBless) != 0) { #string 'God Bless' from sentences
@@ -282,10 +288,10 @@ Counts of the following words or word stems:
 %%	}else{	ss$strGodBless <- 0	}
 %%	# add to speechList and listSpeech
 %%	speechList[[i]] <- ss
-%%	tmpList[i, 1:3] <- unlist(ss[15:17]) #quo
-%%	tmpList[i, 4:13] <- sapply(ss[19:28],sum) #cmw
+%%	tmpList[i, 1:3] <- unlist(ss[15:17]) #quo attr
+%%	tmpList[i, 4:13] <- sapply(ss[19:28],sum) #cmw related attr
 %%}
-%%# prepare for plotting
+%%# prepare for plotting, store as listSpeech elements
 %%listSpeech$quoNum <- tmpList[,1]
 %%listSpeech$quoMean <- tmpList[,2]
 %%listSpeech$quoSD <- tmpList[,3]
@@ -489,7 +495,7 @@ listSpeech$strGodBless <- tmpList[,13]
 %% end.rcode
 
 
-%% begin.rcode PS23-fig, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=6, fig.height=6, out.width='.8\\textwidth'
+%% begin.rcode PS23-fig, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=5, fig.align="center"
 # Create plots
 attach(listSpeech)
 plotTitle1 = "Presidential Speech Statistics Over Time"; xlab="Year"
@@ -500,7 +506,15 @@ plot(date,wc, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Word Cou
 typ="b";lwd=2;col="brown"
 plot(date,wMean, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Avg Word Length")
 plot(date,wSD, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Word Length Std Dev")
+%% end.rcode
 
+We can see that the word counts of the speeches are higher prior to 1920s than the modern ages.
+So does the avg word length and word length sd. The presidents nowadays seem to like brevity.
+
+
+Similar plots for sentence counts and quotation counts are given below. The similar trends stand.
+
+%% begin.rcode PS23-fig2, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=5, fig.align="center"
 layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE)); par(cex.main= 1)
 typ="h"; col="blue"; lwd=6; 
 plot(date,sc, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Sentence Count")
@@ -514,17 +528,31 @@ plot(date,quoNum, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Quot
 typ="b";lwd=2;col="brown"
 plot(date,quoMean, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Avg Quotation Length")
 plot(date,quoSD, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Quotation Length Std Dev")
+%% end.rcode
+
+In recent years, with full records of non-verbal attributes, we can see that [Laughter] and [Applause] counts
+have some positive correlation. The speeches receive more responses from the audience around 2000 than other years.
+
+
+%% begin.rcode PS23-fig3, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=4.5, fig.align="center"
 # recent years
 plotTitle2 = "Presidential Speech Statistics in Modern U.S.A."
-
 recY <- 1: max(c(which(numLaughter > 0),which(numApplause > 0)))
 typ="h";lwd=6;col="blue"
 par(mfrow=c(2,1),cex.main= 1)
 plot(date[recY],numLaughter[recY], type=typ,col=col,lwd=lwd, main=plotTitle2,xlab=xlab,ylab="Laughter Count")
 plot(date[recY],numApplause[recY], type=typ,col=col,lwd=lwd, main=plotTitle2,xlab=xlab,ylab="Applause Count")
+%% end.rcode
+
+And for presidents since Franklin Roosevelt in 1932, comparison between Republican presidents 
+(Eisenhower, Nixon, Ford, Reagan, G. Bush, G.W. Bush) and Democratic presidents 
+(Roosevelt, Truman, Kennedy, Johnson, Carter, Clinton, Obama) are also given below in the box-plot comparison.
+
+
+
+%% begin.rcode PS23-figRD, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=12, fig.align="center"
 # Rep vs Dem
 plotTitle3 = "Republican vs. Democratic Presidential Speech Statistics (Since 1932)"
-
 repPres <- c("Dwight D. Eisenhower", "Richard Nixon", "Gerald R. Ford", 
              "Ronald Reagan", "George Bush", "George W. Bush")
 demPres <- c("Franklin D. Roosevelt", "Harry S. Truman", "John F. Kennedy", 
@@ -550,8 +578,15 @@ boxplot(numApplause[demY],col=col,ylim=c(0,4)); legend("topleft", "Dem. Applause
 boxplot(wMean[demY],col=col); legend("topleft", "Dem. Avg Word Length",cex=cex)
 boxplot(sMean[demY],col=col,ylim=c(90,150)); legend("topleft", "Dem. Avg Sentence Length",cex=cex)
 boxplot(quoMean[demY],col=col,ylim=c(0,400)); legend("topleft", "Dem. Avg Quotation Length",cex=cex)
-# extra
+%% end.rcode
 
+\newpage
+Some additional research with plotting that illustrates how the speeches have changed over time are shown below.
+The different keywords have evolved over time, with peak in WAR during wartime and GOD-rich in recent years.
+
+
+%% begin.rcode PS23-ex1, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=9.5, fig.align="center"
+# extra
 par(mfrow=c(6,1),cex= 0.5, cex.main= 1)
 typ="h"; col="blue"; lwd=6;
 par(mar= c(0.5,6,4,6)); plot(date,strIwe, type=typ,col=col,lwd=lwd, main=plotTitle1,ylab="'I''We' Count")
@@ -560,7 +595,12 @@ par(mar= c(0.5,6,0.5,6)); plot(date,strFree, type=typ,col=col,lwd=lwd, ylab="'Fr
 par(mar= c(0.5,6,0.5,6)); plot(date,strWar, type=typ,col=col,lwd=lwd, ylab="'War' Count")
 par(mar= c(0.5,6,0.5,6)); plot(date,strGod, type=typ,col=col,lwd=lwd, ylab="'God' Count") 
 par(mar= c(4,6,0.5,6)); plot(date,strWoman, type=typ,col=col,lwd=lwd, xlab=xlab,ylab="'Woman' Count")
+%% end.rcode
 
+The comparison between Reps and Dems could be more interesting with the strings REPUBLICAN and DEMOCRATIC.
+It seems that the Dems are more focused on their persuit while Reps are impartial to both words.
+
+%% begin.rcode PS23-ex2, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=5, fig.height=3.5, fig.align="center"
 par(mfrow=c(2,2), mar= c(1,2,1,2)); cex=1
 col="blue";
 boxplot(strRep[repY],col=col,ylim=c(0,15)); legend("topleft", "Rep. 'Rep' Count",cex=cex)
@@ -569,7 +609,13 @@ boxplot(strDem[repY],col=col,ylim=c(0,15)); legend("topleft", "Rep. 'Dem' Count"
 boxplot(strRep[demY],col=col,ylim=c(0,15)); legend("topleft", "Dem. 'Rep' Count",cex=cex)
 col="brown";
 boxplot(strDem[demY],col=col,ylim=c(0,15)); legend("topleft", "Dem. 'Dem' Count",cex=cex)
+%% end.rcode
 
+
+Some additional variables that quantify speech in interesting ways are produced. The number of digits shown within the
+speech is a good indicator whether the president speaks more quantatively, or vice versa, more qualitatively.
+
+%% begin.rcode PS23-ex3, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=4.5, fig.align="center"
 getDigts <- function(x){x <- gsub("(\\d)[,\\.](\\d)","\\1\\2",x, perl= TRUE);
                         x <- gsub("\\D","\n",x, perl= TRUE);
                         xs <- unlist(strsplit(x, "\n", perl= TRUE));
@@ -578,27 +624,6 @@ listSpeech$dc <- sapply(speechVec, function(x){return(length(getDigts(x)))}, USE
 typ="h"; col="blue"; lwd=6; 
 plot(date,listSpeech$dc, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Digits Count")
 %% end.rcode
-
-
-
-
-
-
-And for presidents since Franklin Roosevelt in 1932, comparison between Republican presidents 
-(Eisenhower, Nixon, Ford, Reagan, G. Bush, G.W. Bush) and Democratic presidents 
-(Roosevelt, Truman, Kennedy, Johnson, Carter, Clinton, Obama) are also given.
-
-
-
-
-
-
-
-
-
-Some additional research and/or additional thinking to come up with additional
-variables that quantify speech in interesting ways. Do some plotting that illustrates how the
-speeches have changed over time.
 
 
 

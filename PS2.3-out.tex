@@ -221,7 +221,7 @@ getlauNum <- \hlfunctioncall{function}(x) \{
     \} else \{
         \hlfunctioncall{return}(\hlfunctioncall{length}(\hlfunctioncall{gregexpr}(patLau, x, perl = TRUE)[[1]]))
     \}
-\}
+\}  \hlcomment{# get the number of [laughter]}
 getappNum <- \hlfunctioncall{function}(x) \{
     \hlfunctioncall{if} (\hlfunctioncall{length}(\hlfunctioncall{gregexpr}(patApp, x, perl = TRUE)[[1]]) == 1 && \hlfunctioncall{gregexpr}(patApp, 
         x, perl = TRUE)[[1]] == -1) \{
@@ -229,7 +229,7 @@ getappNum <- \hlfunctioncall{function}(x) \{
     \} else \{
         \hlfunctioncall{return}(\hlfunctioncall{length}(\hlfunctioncall{gregexpr}(patApp, x, perl = TRUE)[[1]]))
     \}
-\}
+\}  \hlcomment{# get the number of [applause]}
 lauNum <- \hlfunctioncall{sapply}(speechVec, getlauNum, USE.NAMES = FALSE)
 appNum <- \hlfunctioncall{sapply}(speechVec, getappNum, USE.NAMES = FALSE)
 speechVec <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x) \{
@@ -239,7 +239,8 @@ speechVec <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x) \{
     x <- \hlfunctioncall{gsub}(patLau, \hlstring{""}, x, perl = TRUE)
     x <- \hlfunctioncall{gsub}(patApp, \hlstring{""}, x, perl = TRUE)
 \})
-\hlfunctioncall{names}(speechVec) <- NULL
+\hlcomment{# remove all the non-verbal tags from the speech text}
+\hlfunctioncall{names}(speechVec) <- NULL  \hlcomment{# clean the speechVec \hlfunctioncall{name} (otherwise, long and messy)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -248,8 +249,9 @@ speechVec <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x) \{
 
 \subsection*{(d)}
 
-The collection of speeches is stored in a clean fashion of list elements. This is easy later for plotting
-variables changes over time.
+The collection of speeches is stored in a clean fashion of list elements. The \textit{i}th entries of all the elements
+in \textit{listSpeech} give information about the \textit{i}th speech. 
+This is easy later for plotting variables changes over time.
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -257,7 +259,7 @@ variables changes over time.
 listSpeech <- \hlfunctioncall{list}()
 listSpeech$id <- fileid
 listSpeech$name <- namePres
-listSpeech$date <- \hlfunctioncall{as.integer}(dateTalk)
+listSpeech$date <- \hlfunctioncall{as.integer}(dateTalk)  \hlcomment{# conversion for plotting, sorting}
 listSpeech$numLaughter <- lauNum
 listSpeech$numApplause <- appNum
 listSpeech$speech <- speechVec
@@ -276,13 +278,15 @@ character vector. Counts are also done on both words and sentences.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcomment{# Speech analysis}
+\hlcomment{# Speech analysis Grab words from the speech by replacing all non-word}
+\hlcomment{# char with space and split}
 getWords <- \hlfunctioncall{function}(x) \{
     x <- \hlfunctioncall{gsub}(\hlstring{"'"}, \hlstring{""}, x, perl = TRUE)
     x <- \hlfunctioncall{gsub}(\hlstring{"\textbackslash{}\textbackslash{}W+"}, \hlstring{" "}, x, perl = TRUE)
     xs <- \hlfunctioncall{unlist}(\hlfunctioncall{strsplit}(x, \hlstring{"[ ]+"}, perl = TRUE))
     \hlfunctioncall{return}(xs[xs != \hlstring{""}])
 \}
+\hlcomment{# Grab sentences from the speech by spliting with ending chars like [.!?]}
 getSents <- \hlfunctioncall{function}(x) \{
     x <- \hlfunctioncall{gsub}(\hlstring{" (Mr|Ms|Mrs|Dr|St|Sr|Jr)\textbackslash{}\textbackslash{}."}, \hlstring{"\textbackslash{}\textbackslash{}1"}, x, perl = TRUE)
     x <- \hlfunctioncall{gsub}(\hlstring{"[\textbackslash{}\textbackslash{}.!\textbackslash{}\textbackslash{}?][ \textbackslash{}t]+"}, \hlstring{"\textbackslash{}n"}, x, perl = TRUE)
@@ -291,22 +295,22 @@ getSents <- \hlfunctioncall{function}(x) \{
 \}
 listSpeech$wc <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x) \{
     \hlfunctioncall{return}(\hlfunctioncall{length}(\hlfunctioncall{getWords}(x)))
-\}, USE.NAMES = FALSE)
+\}, USE.NAMES = FALSE)  \hlcomment{# word count}
 listSpeech$sc <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x) \{
     \hlfunctioncall{return}(\hlfunctioncall{length}(\hlfunctioncall{getSents}(x)))
-\}, USE.NAMES = FALSE)
+\}, USE.NAMES = FALSE)  \hlcomment{# sentence count}
 listSpeech$wMean <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x) \{
     \hlfunctioncall{return}(\hlfunctioncall{mean}(\hlfunctioncall{nchar}(\hlfunctioncall{getWords}(x))))
-\}, USE.NAMES = FALSE)
+\}, USE.NAMES = FALSE)  \hlcomment{#avg word length}
 listSpeech$wSD <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x) \{
     \hlfunctioncall{return}(\hlfunctioncall{sd}(\hlfunctioncall{nchar}(\hlfunctioncall{getWords}(x))))
-\}, USE.NAMES = FALSE)
+\}, USE.NAMES = FALSE)  \hlcomment{# word length sd}
 listSpeech$sMean <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x) \{
     \hlfunctioncall{return}(\hlfunctioncall{mean}(\hlfunctioncall{nchar}(\hlfunctioncall{getSents}(x))))
-\}, USE.NAMES = FALSE)
+\}, USE.NAMES = FALSE)  \hlcomment{# avg sentence length}
 listSpeech$sSD <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x) \{
     \hlfunctioncall{return}(\hlfunctioncall{sd}(\hlfunctioncall{nchar}(\hlfunctioncall{getSents}(x))))
-\}, USE.NAMES = FALSE)
+\}, USE.NAMES = FALSE)  \hlcomment{# sentence length sd}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -318,10 +322,9 @@ listSpeech$sSD <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x
 
 We now start to extract some features of interest from the speeches to analyze how the speeches have
 changed over time. The result of all this is a list with each element containing the information
-about a speech: the speech as a single string, the vector of sentences, the vector of words, the
-word counts, and the additional quantification of variables about the speech from (g) as well as
+about a speech: the speech as a single string, the vector of sentences, the vector of words
+and the additional quantification of variables about the speech from (g) as well as
 the non-verbal variables from (c).
-
 
 \begin{enumerate}
 \item
@@ -335,6 +338,7 @@ quotations in each speech \textit{quoNum,quoMean,quoSD}
 The most common meaningful words, where non-meaningful words are pre-defined \textit{cmw}
 \item
 Counts of the following words or word stems: 
+\scriptsize
 \begin{description}
 \item[I, we]
 \item[America{,n}]
@@ -350,7 +354,7 @@ Counts of the following words or word stems:
 \item[Woman] -- I think would be interesting
 \end{description}
 \end{enumerate}
-
+\normalsize
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -358,19 +362,21 @@ Counts of the following words or word stems:
 tmpList <- \hlfunctioncall{matrix}(\hlfunctioncall{rep}(0, 226 * 15), nrow = 226, ncol = 15)
 \hlcomment{## Speech list with element-wise analysis}
 speechList <- \hlfunctioncall{list}()  \hlcomment{#empty list}
-\hlfunctioncall{system}(\hlstring{"wget -O \hlstring{'common_words.txt'} \hlstring{'http://www.textfixer.com/resources/common-english-words.txt'}"})
-commonWords <- \hlfunctioncall{readLines}(\hlstring{"common_words.txt"}, warn = FALSE)
+\hlcomment{# Get the non-meaningful words file}
+\hlfunctioncall{system}(\hlstring{"wget -O \hlstring{'cmw.txt'} \hlstring{'http://www.textfixer.com/resources/common-english-words.txt'}"})
+commonWords <- \hlfunctioncall{readLines}(\hlstring{"cmw.txt"}, warn = FALSE)
 commonWords <- \hlfunctioncall{unlist}(\hlfunctioncall{strsplit}(commonWords, \hlstring{","}, perl = TRUE))
+\hlcomment{# Element-wise analysis on each speech}
 \hlfunctioncall{for} (i in 1:\hlfunctioncall{length}(fileid)) \{
-    ss <- \hlfunctioncall{list}()
-    \hlcomment{# Global attr}
+    ss <- \hlfunctioncall{list}()  \hlcomment{#empty list element}
+    \hlcomment{# Global attributes: from results \hlfunctioncall{before} (reproduce for better storage)}
     ss$id <- fileid[i]
     ss$name <- namePres[i]
     ss$date <- \hlfunctioncall{as.integer}(dateTalk[i])
     ss$numLaughter <- lauNum[i]
     ss$numApplause <- appNum[i]
     ss$speech <- speechVec[i]
-    \hlcomment{# Indiv attr}
+    \hlcomment{# Indiv attributes: get from within each speech}
     talkWords <- \hlfunctioncall{getWords}(speechVec[i])
     talkSents <- \hlfunctioncall{getSents}(speechVec[i])
     ss$words <- talkWords  \hlcomment{# words vector}
@@ -384,7 +390,7 @@ commonWords <- \hlfunctioncall{unlist}(\hlfunctioncall{strsplit}(commonWords, \h
     patQuo <- \hlstring{"\textbackslash{}"}(.*?)\textbackslash{}\hlstring{""}  # quotation pattern
     quo <- talkSents[\hlfunctioncall{grep}(patQuo, talkSents, perl = TRUE)]
     \hlfunctioncall{if} (\hlfunctioncall{length}(quo) != 0) \{
-        \hlcomment{# get quotation attr}
+        \hlcomment{# get quotation attributes}
         quo <- \hlfunctioncall{sapply}(quo, \hlfunctioncall{function}(x) \{
             \hlfunctioncall{gsub}(patQuo, \hlstring{"\textbackslash{}\textbackslash{}1"}, x)
         \}, USE.NAMES = FALSE)
@@ -401,13 +407,13 @@ commonWords <- \hlfunctioncall{unlist}(\hlfunctioncall{strsplit}(commonWords, \h
     cmw <- cmw[\hlfunctioncall{which}(!(\hlfunctioncall{names}(cmw) %in% commonWords))]  \hlcomment{# get meaningful words}
     ss$cmw <- cmw[cmw >= 10]  \hlcomment{#arbitrary cut-off for display}
     ss$strIwe <- cmw[\hlfunctioncall{grep}(\hlstring{"^(I|[Ww]e)$"}, \hlfunctioncall{names}(cmw))]  #string \hlstring{'I|We'}; ss[19]
-    ss$strAme <- cmw[\hlfunctioncall{grep}(\hlstring{"[Aa]\hlfunctioncall{merica}(|n)"}, \hlfunctioncall{names}(cmw))]
-    ss$strDem <- cmw[\hlfunctioncall{grep}(\hlstring{"[Dd]\hlfunctioncall{emocra}(cy|tic)"}, \hlfunctioncall{names}(cmw))]
-    ss$strRep <- cmw[\hlfunctioncall{grep}(\hlstring{"[Rr]\hlfunctioncall{epublic}(|n)"}, \hlfunctioncall{names}(cmw))]
-    ss$strFree <- cmw[\hlfunctioncall{grep}(\hlstring{"^[Ff]\hlfunctioncall{ree}(|dom)$"}, \hlfunctioncall{names}(cmw))]
-    ss$strWar <- cmw[\hlfunctioncall{grep}(\hlstring{"^[Ww]\hlfunctioncall{ar}(|s)$"}, \hlfunctioncall{names}(cmw))]
-    ss$strGod <- cmw[\hlfunctioncall{grep}(\hlstring{"^[Gg]\hlfunctioncall{od}(|s)$"}, \hlfunctioncall{names}(cmw))]
-    ss$strChr <- cmw[\hlfunctioncall{grep}(\hlstring{"(Jesus|Christ|Christian)"}, \hlfunctioncall{names}(cmw))]
+    ss$strAme <- cmw[\hlfunctioncall{grep}(\hlstring{"[Aa]\hlfunctioncall{merica}(|n)"}, \hlfunctioncall{names}(cmw))]  #string \hlstring{'America'}
+    ss$strDem <- cmw[\hlfunctioncall{grep}(\hlstring{"[Dd]\hlfunctioncall{emocra}(cy|tic)"}, \hlfunctioncall{names}(cmw))]  #string \hlstring{'democratic'}
+    ss$strRep <- cmw[\hlfunctioncall{grep}(\hlstring{"[Rr]\hlfunctioncall{epublic}(|n)"}, \hlfunctioncall{names}(cmw))]  #string \hlstring{'republican'}
+    ss$strFree <- cmw[\hlfunctioncall{grep}(\hlstring{"^[Ff]\hlfunctioncall{ree}(|dom)$"}, \hlfunctioncall{names}(cmw))]  #string \hlstring{'free'}
+    ss$strWar <- cmw[\hlfunctioncall{grep}(\hlstring{"^[Ww]\hlfunctioncall{ar}(|s)$"}, \hlfunctioncall{names}(cmw))]  #string \hlstring{'war'}
+    ss$strGod <- cmw[\hlfunctioncall{grep}(\hlstring{"^[Gg]\hlfunctioncall{od}(|s)$"}, \hlfunctioncall{names}(cmw))]  #string \hlstring{'God'}
+    ss$strChr <- cmw[\hlfunctioncall{grep}(\hlstring{"(Jesus|Christ|Christian)"}, \hlfunctioncall{names}(cmw))]  #string \hlstring{'Chirst|Jesus'}
     ss$strWoman <- cmw[\hlfunctioncall{grep}(\hlstring{"^[Ww]om[ae]n$"}, \hlfunctioncall{names}(cmw))]  #Mystring \hlstring{'Woman'}; ss[27]
     ssGodBless <- talkSents[\hlfunctioncall{grep}(\hlstring{"[Gg]od [Bb]less"}, talkSents, perl = TRUE)]
     \hlfunctioncall{if} (\hlfunctioncall{length}(ssGodBless) != 0) \{
@@ -420,10 +426,10 @@ commonWords <- \hlfunctioncall{unlist}(\hlfunctioncall{strsplit}(commonWords, \h
     \}
     \hlcomment{# add to speechList and listSpeech}
     speechList[[i]] <- ss
-    tmpList[i, 1:3] <- \hlfunctioncall{unlist}(ss[15:17])  \hlcomment{#quo}
-    tmpList[i, 4:13] <- \hlfunctioncall{sapply}(ss[19:28], sum)  \hlcomment{#cmw}
+    tmpList[i, 1:3] <- \hlfunctioncall{unlist}(ss[15:17])  \hlcomment{#quo attr}
+    tmpList[i, 4:13] <- \hlfunctioncall{sapply}(ss[19:28], sum)  \hlcomment{#cmw related attr}
 \}
-\hlcomment{# prepare for plotting}
+\hlcomment{# prepare for plotting, store as listSpeech elements}
 listSpeech$quoNum <- tmpList[, 1]
 listSpeech$quoMean <- tmpList[, 2]
 listSpeech$quoSD <- tmpList[, 3]
@@ -452,202 +458,115 @@ Some basic plots that show how the variables have changed over time are given be
 
 
 \begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcomment{# Create plots}
-\hlfunctioncall{attach}(listSpeech)
-plotTitle1 = \hlstring{"Presidential Speech Statistics Over Time"}
-xlab = \hlstring{"Year"}
-\hlcomment{# over time}
-\hlfunctioncall{layout}(\hlfunctioncall{matrix}(\hlfunctioncall{c}(1, 1, 2, 3), 2, 2, byrow = TRUE))
-\hlfunctioncall{par}(cex.main = 1)
-typ = \hlstring{"h"}
-col = \hlstring{"blue"}
-lwd = 6
-\hlfunctioncall{plot}(date, wc, type = typ, col = col, lwd = lwd, main = plotTitle1, xlab = xlab, 
-    ylab = \hlstring{"Word Count"})
-typ = \hlstring{"b"}
-lwd = 2
-col = \hlstring{"brown"}
-\hlfunctioncall{plot}(date, wMean, type = typ, col = col, lwd = lwd, main = plotTitle1, xlab = xlab, 
-    ylab = \hlstring{"Avg Word Length"})
-\hlfunctioncall{plot}(date, wSD, type = typ, col = col, lwd = lwd, main = plotTitle1, xlab = xlab, 
-    ylab = \hlstring{"Word Length Std Dev"})
-\end{alltt}
-\end{kframe}\includegraphics[width=.8\textwidth]{figure/latex-PS23-fig1} \begin{kframe}\begin{alltt}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
 
-\hlfunctioncall{layout}(\hlfunctioncall{matrix}(\hlfunctioncall{c}(1, 1, 2, 3), 2, 2, byrow = TRUE))
-\hlfunctioncall{par}(cex.main = 1)
-typ = \hlstring{"h"}
-col = \hlstring{"blue"}
-lwd = 6
-\hlfunctioncall{plot}(date, sc, type = typ, col = col, lwd = lwd, main = plotTitle1, xlab = xlab, 
-    ylab = \hlstring{"Sentence Count"})
-typ = \hlstring{"b"}
-lwd = 2
-col = \hlstring{"brown"}
-\hlfunctioncall{plot}(date, sMean, type = typ, col = col, lwd = lwd, main = plotTitle1, xlab = xlab, 
-    ylab = \hlstring{"Avg Sentence Length"})
-\hlfunctioncall{plot}(date, sSD, type = typ, col = col, lwd = lwd, main = plotTitle1, xlab = xlab, 
-    ylab = \hlstring{"Sentence Length Std Dev"})
-\end{alltt}
-\end{kframe}\includegraphics[width=.8\textwidth]{figure/latex-PS23-fig2} \begin{kframe}\begin{alltt}
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS23-fig} 
 
-\hlfunctioncall{layout}(\hlfunctioncall{matrix}(\hlfunctioncall{c}(1, 1, 2, 3), 2, 2, byrow = TRUE))
-\hlfunctioncall{par}(cex.main = 1)
-typ = \hlstring{"h"}
-lwd = 6
-col = \hlstring{"blue"}
-\hlfunctioncall{plot}(date, quoNum, type = typ, col = col, lwd = lwd, main = plotTitle1, xlab = xlab, 
-    ylab = \hlstring{"Quotation Count"})
-typ = \hlstring{"b"}
-lwd = 2
-col = \hlstring{"brown"}
-\hlfunctioncall{plot}(date, quoMean, type = typ, col = col, lwd = lwd, main = plotTitle1, xlab = xlab, 
-    ylab = \hlstring{"Avg Quotation Length"})
-\hlfunctioncall{plot}(date, quoSD, type = typ, col = col, lwd = lwd, main = plotTitle1, xlab = xlab, 
-    ylab = \hlstring{"Quotation Length Std Dev"})
-\end{alltt}
-\end{kframe}\includegraphics[width=.8\textwidth]{figure/latex-PS23-fig3} \begin{kframe}\begin{alltt}
-\hlcomment{# recent years}
-plotTitle2 = \hlstring{"Presidential Speech Statistics in Modern U.S.A."}
+}
 
-recY <- 1:\hlfunctioncall{max}(\hlfunctioncall{c}(\hlfunctioncall{which}(numLaughter > 0), \hlfunctioncall{which}(numApplause > 0)))
-typ = \hlstring{"h"}
-lwd = 6
-col = \hlstring{"blue"}
-\hlfunctioncall{par}(mfrow = \hlfunctioncall{c}(2, 1), cex.main = 1)
-\hlfunctioncall{plot}(date[recY], numLaughter[recY], type = typ, col = col, lwd = lwd, main = plotTitle2, 
-    xlab = xlab, ylab = \hlstring{"Laughter Count"})
-\hlfunctioncall{plot}(date[recY], numApplause[recY], type = typ, col = col, lwd = lwd, main = plotTitle2, 
-    xlab = xlab, ylab = \hlstring{"Applause Count"})
-\end{alltt}
-\end{kframe}\includegraphics[width=.8\textwidth]{figure/latex-PS23-fig4} \begin{kframe}\begin{alltt}
-\hlcomment{# Rep vs Dem}
-plotTitle3 = \hlstring{"Republican vs. Democratic Presidential Speech \hlfunctioncall{Statistics} (Since 1932)"}
 
-repPres <- \hlfunctioncall{c}(\hlstring{"Dwight D. Eisenhower"}, \hlstring{"Richard Nixon"}, \hlstring{"Gerald R. Ford"}, \hlstring{"Ronald Reagan"}, 
-    \hlstring{"George Bush"}, \hlstring{"George W. Bush"})
-demPres <- \hlfunctioncall{c}(\hlstring{"Franklin D. Roosevelt"}, \hlstring{"Harry S. Truman"}, \hlstring{"John F. Kennedy"}, 
-    \hlstring{"Lyndon B. Johnson"}, \hlstring{"Jimmy Carter"}, \hlstring{"William J. Clinton"}, \hlstring{"Barack Obama"})
-repY <- \hlfunctioncall{which}(name %in% repPres)
-demY <- \hlfunctioncall{which}(name %in% demPres)
-\hlfunctioncall{layout}(\hlfunctioncall{matrix}(1:16, 8, 2))
-\hlfunctioncall{par}(mar = \hlfunctioncall{c}(1.5, 6, 1.5, 6))
-col = \hlstring{"blue"}
-cex = 0.6
-\hlfunctioncall{boxplot}(wc[repY], col = col, ylim = \hlfunctioncall{c}(2000, 10000))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Rep. Word Count"}, cex = cex)
-\hlfunctioncall{boxplot}(sc[repY], col = col, ylim = \hlfunctioncall{c}(100, 800))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Rep. Sentence Count"}, cex = cex)
-\hlfunctioncall{boxplot}(quoNum[repY], col = col, ylim = \hlfunctioncall{c}(0, 12))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Rep. Quotation Count"}, cex = cex)
-\hlfunctioncall{boxplot}(numLaughter[repY], col = col, ylim = \hlfunctioncall{c}(0, 8))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Rep. Laughter Count"}, cex = cex)
-\hlfunctioncall{boxplot}(numApplause[repY], col = col, ylim = \hlfunctioncall{c}(0, 4))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Rep. Applause Count"}, cex = cex)
-\hlfunctioncall{boxplot}(wMean[repY], col = col)
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Rep. Avg Word Length"}, cex = cex)
-\hlfunctioncall{boxplot}(sMean[repY], col = col, ylim = \hlfunctioncall{c}(90, 150))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Rep. Avg Sentence Length"}, cex = cex)
-\hlfunctioncall{boxplot}(quoMean[repY], col = col, ylim = \hlfunctioncall{c}(0, 400))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Rep. Avg Quotation Length"}, cex = cex)
-col = \hlstring{"brown"}
-cex = 0.6
-\hlfunctioncall{boxplot}(wc[demY], col = col, ylim = \hlfunctioncall{c}(2000, 10000))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Dem. Word Count"}, cex = cex)
-\hlfunctioncall{boxplot}(sc[demY], col = col, ylim = \hlfunctioncall{c}(100, 800))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Dem. Sentence Count"}, cex = cex)
-\hlfunctioncall{boxplot}(quoNum[demY], col = col, ylim = \hlfunctioncall{c}(0, 12))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Dem. Quotation Count"}, cex = cex)
-\hlfunctioncall{boxplot}(numLaughter[demY], col = col, ylim = \hlfunctioncall{c}(0, 8))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Dem. Laughter Count"}, cex = cex)
-\hlfunctioncall{boxplot}(numApplause[demY], col = col, ylim = \hlfunctioncall{c}(0, 4))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Dem. Applause Count"}, cex = cex)
-\hlfunctioncall{boxplot}(wMean[demY], col = col)
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Dem. Avg Word Length"}, cex = cex)
-\hlfunctioncall{boxplot}(sMean[demY], col = col, ylim = \hlfunctioncall{c}(90, 150))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Dem. Avg Sentence Length"}, cex = cex)
-\hlfunctioncall{boxplot}(quoMean[demY], col = col, ylim = \hlfunctioncall{c}(0, 400))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Dem. Avg Quotation Length"}, cex = cex)
-\end{alltt}
-\end{kframe}\includegraphics[width=.8\textwidth]{figure/latex-PS23-fig5} \begin{kframe}\begin{alltt}
-\hlcomment{# extra}
-
-\hlfunctioncall{par}(mfrow = \hlfunctioncall{c}(6, 1), cex = 0.5, cex.main = 1)
-typ = \hlstring{"h"}
-col = \hlstring{"blue"}
-lwd = 6
-\hlfunctioncall{par}(mar = \hlfunctioncall{c}(0.5, 6, 4, 6))
-\hlfunctioncall{plot}(date, strIwe, type = typ, col = col, lwd = lwd, main = plotTitle1, ylab = \hlstring{"\hlstring{'I'}\hlstring{'We'} Count"})
-\hlfunctioncall{par}(mar = \hlfunctioncall{c}(0.5, 6, 0.5, 6))
-\hlfunctioncall{plot}(date, strAme, type = typ, col = col, lwd = lwd, ylab = \hlstring{"\hlstring{'America'} Count"})
-\hlfunctioncall{par}(mar = \hlfunctioncall{c}(0.5, 6, 0.5, 6))
-\hlfunctioncall{plot}(date, strFree, type = typ, col = col, lwd = lwd, ylab = \hlstring{"\hlstring{'Free/dom'} Count"})
-\hlfunctioncall{par}(mar = \hlfunctioncall{c}(0.5, 6, 0.5, 6))
-\hlfunctioncall{plot}(date, strWar, type = typ, col = col, lwd = lwd, ylab = \hlstring{"\hlstring{'War'} Count"})
-\hlfunctioncall{par}(mar = \hlfunctioncall{c}(0.5, 6, 0.5, 6))
-\hlfunctioncall{plot}(date, strGod, type = typ, col = col, lwd = lwd, ylab = \hlstring{"\hlstring{'God'} Count"})
-\hlfunctioncall{par}(mar = \hlfunctioncall{c}(4, 6, 0.5, 6))
-\hlfunctioncall{plot}(date, strWoman, type = typ, col = col, lwd = lwd, xlab = xlab, ylab = \hlstring{"\hlstring{'Woman'} Count"})
-\end{alltt}
-\end{kframe}\includegraphics[width=.8\textwidth]{figure/latex-PS23-fig6} \begin{kframe}\begin{alltt}
-
-\hlfunctioncall{par}(mfrow = \hlfunctioncall{c}(2, 2), mar = \hlfunctioncall{c}(1, 2, 1, 2))
-cex = 1
-col = \hlstring{"blue"}
-\hlfunctioncall{boxplot}(strRep[repY], col = col, ylim = \hlfunctioncall{c}(0, 15))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Rep. \hlstring{'Rep'} Count"}, cex = cex)
-col = \hlstring{"purple"}
-\hlfunctioncall{boxplot}(strDem[repY], col = col, ylim = \hlfunctioncall{c}(0, 15))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Rep. \hlstring{'Dem'} Count"}, cex = cex)
-\hlfunctioncall{boxplot}(strRep[demY], col = col, ylim = \hlfunctioncall{c}(0, 15))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Dem. \hlstring{'Rep'} Count"}, cex = cex)
-col = \hlstring{"brown"}
-\hlfunctioncall{boxplot}(strDem[demY], col = col, ylim = \hlfunctioncall{c}(0, 15))
-\hlfunctioncall{legend}(\hlstring{"topleft"}, \hlstring{"Dem. \hlstring{'Dem'} Count"}, cex = cex)
-\end{alltt}
-\end{kframe}\includegraphics[width=.8\textwidth]{figure/latex-PS23-fig7} \begin{kframe}\begin{alltt}
-
-getDigts <- \hlfunctioncall{function}(x) \{
-    x <- \hlfunctioncall{gsub}(\hlstring{"(\textbackslash{}\textbackslash{}d)[,\textbackslash{}\textbackslash{}.](\textbackslash{}\textbackslash{}d)"}, \hlstring{"\textbackslash{}\textbackslash{}1\textbackslash{}\textbackslash{}2"}, x, perl = TRUE)
-    x <- \hlfunctioncall{gsub}(\hlstring{"\textbackslash{}\textbackslash{}D"}, \hlstring{"\textbackslash{}n"}, x, perl = TRUE)
-    xs <- \hlfunctioncall{unlist}(\hlfunctioncall{strsplit}(x, \hlstring{"\textbackslash{}n"}, perl = TRUE))
-    \hlfunctioncall{return}(xs[xs != \hlstring{""}])
-\}
-listSpeech$dc <- \hlfunctioncall{sapply}(speechVec, \hlfunctioncall{function}(x) \{
-    \hlfunctioncall{return}(\hlfunctioncall{length}(\hlfunctioncall{getDigts}(x)))
-\}, USE.NAMES = FALSE)
-typ = \hlstring{"h"}
-col = \hlstring{"blue"}
-lwd = 6
-\hlfunctioncall{plot}(date, listSpeech$dc, type = typ, col = col, lwd = lwd, main = plotTitle1, 
-    xlab = xlab, ylab = \hlstring{"Digits Count"})
-\end{alltt}
-\end{kframe}\includegraphics[width=.8\textwidth]{figure/latex-PS23-fig8} 
 \end{knitrout}
 
 
+We can see that the word counts of the speeches are higher prior to 1920s than the modern ages.
+So does the avg word length and word length sd. The presidents nowadays seem to like brevity.
+
+
+Similar plots for sentence counts and quotation counts are given below. The similar trends stand.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS23-fig21} 
+
+}
 
 
 
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS23-fig22} 
+
+}
+
+
+\end{knitrout}
+
+
+In recent years, with full records of non-verbal attributes, we can see that [Laughter] and [Applause] counts
+have some positive correlation. The speeches receive more responses from the audience around 2000 than other years.
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS23-fig3} 
+
+}
+
+
+\end{knitrout}
 
 
 And for presidents since Franklin Roosevelt in 1932, comparison between Republican presidents 
 (Eisenhower, Nixon, Ford, Reagan, G. Bush, G.W. Bush) and Democratic presidents 
-(Roosevelt, Truman, Kennedy, Johnson, Carter, Clinton, Obama) are also given.
+(Roosevelt, Truman, Kennedy, Johnson, Carter, Clinton, Obama) are also given below in the box-plot comparison.
 
 
 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS23-figRD} 
+
+}
+
+
+\end{knitrout}
+
+
+\newpage
+Some additional research with plotting that illustrates how the speeches have changed over time are shown below.
+The different keywords have evolved over time, with peak in WAR during wartime and GOD-rich in recent years.
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS23-ex1} 
+
+}
+
+
+\end{knitrout}
+
+
+The comparison between Reps and Dems could be more interesting with the strings REPUBLICAN and DEMOCRATIC.
+It seems that the Dems are more focused on their persuit while Reps are impartial to both words.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS23-ex2} 
+
+}
+
+
+\end{knitrout}
 
 
 
+Some additional variables that quantify speech in interesting ways are produced. The number of digits shown within the
+speech is a good indicator whether the president speaks more quantatively, or vice versa, more qualitatively.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS23-ex3} 
+
+}
 
 
+\end{knitrout}
 
-Some additional research and/or additional thinking to come up with additional
-variables that quantify speech in interesting ways. Do some plotting that illustrates how the
-speeches have changed over time.
 
 
 
