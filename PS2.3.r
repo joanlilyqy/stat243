@@ -21,9 +21,9 @@ indexPres <- sapply(indexPres, function(x){gsub(patUrl2,"",x)},USE.NAMES= FALSE)
 patUrl3 <- 'http:\\/\\/www\\.presidency\\.ucsb\\.edu\\/ws\\/index\\.php\\?pid='
 fileid <- sapply(indexPres, function(x){gsub(patUrl3,"",x)},USE.NAMES= FALSE)
 # Download all files and convert to unix
-sapply(1:length(fileid),
-       function(i){system(paste("wget -q -O '",fileid[i],".html' '",indexPres[i],"'",sep=""));
-                   system(paste("fromdos ",fileid[i],".html",sep=""))})
+#sapply(1:length(fileid),
+#       function(i){system(paste("wget -q -O '",fileid[i],".html' '",indexPres[i],"'",sep=""));
+#                   system(paste("fromdos ",fileid[i],".html",sep=""))})
 
 ff <- sapply(fileid, function(x){readLines(paste(x,".html",sep=""), warn= FALSE)})
 
