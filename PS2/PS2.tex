@@ -1,0 +1,845 @@
+\documentclass{article}
+
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{\today}
+\chead{Ying Qiao SID:21412301}
+\rhead{Stat243 Fa12: Problem Set 2}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+
+%% for inline R code: if the inline code is not correctly parsed, you will see a message
+\newcommand{\rinline}[1]{SOMETHING WORNG WITH knitr}
+%% begin.rcode setup, include=FALSE
+% opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-')
+%% end.rcode
+
+
+\begin{document}
+%% begin.rcode echo=FALSE
+%% rm(list=ls(all=TRUE)) #remove all objects
+%% end.rcode
+\section*{Problem 1}
+
+To have a function that lists the objects in the workspace in a nicely formatted manner, serveral auxiliary 
+printing function (\textit{printObj}, \textit{printUnit}) is created first for cleaner coding. 
+
+%% begin.rcode PS21-print, cache=TRUE, results="hide"
+%%## Aux Printing Fun:
+%%## Define printing control global parameter
+%%wid = 20		# object name priting width
+%%digit = 10	# byte size printing digits
+%%## Print out file size according to auto-match units
+%%printUnit <- function (obj) { 
+%%            	units = c("", "k", "M", "G")
+%%            	i = 1; while (obj >= 1024) { obj = obj / 1024; i = i + 1;} # get proper units
+%%            	if (i == 1) { cat(format(obj,width = digit,justify = 'right'),"\n",sep = "") }
+%%            	else { cat(format(as.integer(obj),width = digit - 1,justify = 'right'),units[i],"\n",sep = "") }
+%%            }
+%%## Print out the object list in a nicely formatted way																
+%%printObj <- function (objList, objName, pretty) { 
+%%            	cat(format("object",width = wid),format("bytes",width = digit,justify = 'right'),"\n",sep = "")
+%%            	if (pretty == FALSE){ # pretty==TRUE: it will call the printUnit to print out proper units for sizes	
+%%								t<-sapply(1:length(objList),function(i){cat(format(objName[i],width=wid),format(objList[i],width=digit,justify='right'),"\n",sep="")})}
+%%            	else{ # default:      it will just print out number of bytes	
+%%                t<-sapply(1:length(objList),function(i){cat(format(names(objList)[i], width = wid));printUnit(objList[i])})}
+%%            }
+%% end.rcode
+
+The main function will list objects ordered by size from largest to smallest; it allows the user to 
+either specify how many objects to list or to specify that objects larger than a certain size 
+to be listed. The argument \textit{pretty}, when TRUE, results in the size of the objects being printed 
+with the units tailored by function \textit{printUnit}.
+By default, \textit{lsObj<-function(numls=100, sizeB=0, pretty=FALSE)} 
+will give sensible results.	
+Also, the main function shown below is already written to be able to print out only
+objects in the frame of the function call when called from within another function.
+
+\newpage
+%% begin.rcode PS21-main, cache=TRUE, results="hide"
+%%lsObj <- function (numls = 100, sizeB = 0, pretty = FALSE) {	
+%%					listLs <- ls(envir = parent.frame()) # object list
+%%         	sizeLs <- sapply(listLs,function(x){object.size(get(x,envir = parent.frame(n = 4)))}) 
+%%         	# get all object sizes from within the called frame; n=4:FUN->sapply->lsObj->call(lsObj)
+%%					tmpEnv <- NULL; nameEnv <- NULL # store object sizes and names within a certain user-defined ENV
+%%					tmpFun <- NULL; nameFun <- NULL # store object sizes and names within a function closure
+%%					for (item in listLs){ # elborate objects to find hidden ones
+%%					  objitem <- get(item, envir = parent.frame())
+%%						if (is.environment(objitem)) { # get sizes and store names with ENV prefix
+%%							tt <- sapply(ls(envir = objitem), function(x){object.size(get(x,envir = objitem))})
+%%							tmpEnv <- c(tmpEnv,tt); nameEnv <- c(nameEnv, paste(item,"$",ls(envir = objitem),sep = ""))
+%%						}
+%%						if (is.function(objitem) && identical(environment(objitem), parent.frame())== FALSE ){ # get sizes and store names with FUN prefix
+%%							tt <- sapply(ls(envir = environment(objitem)), function(x){object.size(get(x,envir = environment(objitem)))})
+%%							tmpFun <- c(tmpFun,tt); nameFun <- c(nameFun, paste(item,"$",ls(envir = environment(objitem)),sep = ""))
+%%						}
+%%					}
+%%					names(tmpEnv) <- nameEnv; names(tmpFun) <- nameFun
+%%         	if (length(tmpEnv) > 0) { sizeLs <- c(sizeLs,tmpEnv) } #if there is use-defined ENV
+%%        	if (length(tmpFun) > 0) { sizeLs <- c(sizeLs,tmpFun) } #if there is FUN closure
+%%         	sizeLs <- sizeLs[sizeLs[] > sizeB] # find objects larger than sizeB(bytes)
+%%         	if (numls > length(sizeLs)) { numls = length(sizeLs) } #prune incorrect listing number
+%%         	sizeLs <- sort(sizeLs, decreasing = TRUE)[1:numls] # find the numls largest objects
+%%         	nameLs <- names(sizeLs) # get the name of vector
+%%          printObj(sizeLs,nameLs,pretty) # print using the aux functions
+%%         }
+%% end.rcode
+
+\newpage
+
+The above main function has the capability to deal with user-created environments and objects within a closure.
+It elborates the objects obtained from the \textit{ls()} function to see if there are user-defined ENV or FUN closure.
+When detected, it then goes one frame down to the enclosing environment to get the hidden objects and assign names to
+them with ENV/FUN prefix.
+
+
+To create objects of various sizes for testing, I generated vectors of random normals of different lengths, 
+along with serveral hidden ENV/FUN examples for testing.
+
+
+%% begin.rcode PS21-test0, cache=TRUE, eval=FALSE, results="hide"
+%%#### Generate objects test cases
+%%ob0 <- rnorm(1);ob1 <- rnorm(10);ob2 <- rnorm(100);ob3 <- rnorm(1000);ob4 <- rnorm(10000);ob5 <- rnorm(100000)
+%%ob6 <- rnorm(1000000);ob7 <- rnorm(10000000)
+%% end.rcode
+
+%% begin.rcode PS21-test1, cache=TRUE, echo=FALSE, results="markup"
+%%#### Generate objects test cases
+%%ob0 <- rnorm(1);ob1 <- rnorm(10);ob2 <- rnorm(100);ob3 <- rnorm(1000);ob4 <- rnorm(10000);ob5 <- rnorm(100000)
+%%ob6 <- rnorm(1000000);ob7 <- rnorm(10000000)
+%%#### Test case
+%%cat("**********Test Case 1*************\nlsObj(5,128)\n")
+%%lsObj(5,128)
+%%cat("**********Test Case 2*************\nlsObj(sizeB = 1024)\n")
+%%lsObj(sizeB = 1024)
+%%cat("**********Test Case 3*************\nlsObj(numls = 3)\n")
+%%lsObj(numls = 3)
+%%cat("**********Test Case 4*************\nlsObj(pretty = TRUE)\n")
+%%lsObj(pretty = TRUE)
+%% end.rcode
+
+%% begin.rcode PS21-test2, cache=TRUE, eval=FALSE, results="hide"
+%%testFunc <- function () {
+%%            	data <- rnorm(10000);	data2 <- rnorm(100000)
+%%            	myFun <- function(theta) { 
+%%                       dist <- rnorm(theta); return(exp(dist / theta)); }
+%%	lsObj()}
+%%testEx <- function () {
+%%          	x <- rnorm(100000);	data <- rnorm(1000)
+%%          	e <- new.env(); e$a <- x # an object hidden in an environment
+%%          	e2 <- new.env(); e2$a2 <- x; e2$b2 <- 52
+%%          	myFun <- function(theta) { 
+%%                     dist <- rnorm(theta); return(exp(dist / theta)); }
+%%          	myFun1 <- function(theta) { 
+%%                      dist <- rnorm(theta); return(exp(dist / theta)); }
+%%          	myFun2 <- with(list( data = x ), # an object hidden in a closure
+%%                          function(theta) { 
+%%                          dist <- rdist(data); return(exp(dist / theta)); } )
+%%            myFun3 <- with(list( data2 = x ),
+%%                          function(theta2) { 
+%%                          dist <- rdist(data); return(exp(dist / theta2)); } )
+%%	lsObj()}
+%% end.rcode
+
+%% begin.rcode PS21-test3, cache=TRUE, echo=FALSE, results="markup"
+%%cat("**********Test Case 5*************\nlsObj() in testFunc()\n")
+%%testFunc <- function () {
+%%            	data <- rnorm(10000)
+%%            	data2 <- rnorm(100000)
+%%            	myFun <- function(theta) { dist <- rnorm(theta); return(exp(dist / theta)); }
+%%	lsObj()
+%%}
+%%testFunc()
+%%cat("**********Test Case 6*************\nlsObj() in test testEx()\n")
+%%testEx <- function () {
+%%          	x <- rnorm(100000)
+%%          	data <- rnorm(1000)
+%%          	e <- new.env(); e$a <- x # an object hidden in an environment
+%%          	e2 <- new.env(); e2$a2 <- x; e2$b2 <- 52
+%%          	myFun <- function(theta) { dist <- rnorm(theta); return(exp(dist / theta)); }
+%%          	myFun1 <- function(theta) { dist <- rnorm(theta); return(exp(dist / theta)); }
+%%          	myFun2 <- with(list( data = x ), # an object hidden in a closure
+%%                          function(theta) { dist <- rdist(data); return(exp(dist / theta)); } )
+%%            myFun3 <- with(list( data2 = x ),
+%%                          function(theta2) { dist <- rdist(data); return(exp(dist / theta2)); } )
+%%	lsObj()
+%%}
+%%testEx()
+%% end.rcode
+
+
+\newpage
+\section*{Problem 2}
+
+After reading in the character vector text from the online traffic logs \textit{IPs.RData}, the 
+code below could extract out all the IP numbers. In the meanwhile, it can determine how many IP 
+addresses are in each element of the vector with function \textit{getIPnum}.
+
+%% begin.rcode PS22-regex0, cache=TRUE, eval=FALSE, results="hide"
+%% patIP <- "((\\d{1,3}\\.){3}\\d{1,3})" #Perl style pattern for IP
+%% getIPnum <- function (t) { if (length(grep(patIP,t,perl=TRUE)) == 0) {return (0)}
+%%                           else {return (length(gregexpr(patIP,t,perl=TRUE)[[1]]))}
+%%                         } # get number of IPs per text element
+%% getIPidx <- function (t) { return (gregexpr(patIP,t,perl=TRUE)[[1]]) } # get index of IPs in text element
+%% ipNum <- sapply(text, getIPnum, USE.NAMES = FALSE) # apply to the character vector
+%% ipIdx <- lapply(text, getIPidx) # maintain list structure of index for each IP log
+%% ipStr <- regmatches(text,ipIdx) 
+%% # obtain IPs in list; multiple IPs per element stored in list items
+%% end.rcode
+
+The results of getting the number of IPs within one element of \textit{text} is one integer vector of 
+the length \textit{length(text)}. All the extracted IPs are stored in the list \textit{ipStr}, 
+with each element of a character vector in length \textit{ipNum[i]} of all the IPs from line \textit{text[i]}.
+NA or no-IP results are treated as empty string.
+
+%% begin.rcode PS22-regex1, cache=TRUE, echo=FALSE, results="markup"
+# R
+#### Stat243
+#### Problem Set 2
+#### 2. Regular expression
+
+rm(list=ls(all=TRUE)) # remove all objects
+load('IPs.RData') # import text data
+
+patIP <- "((\\d{1,3}\\.){3}\\d{1,3})" #Perl style pattern for IP
+
+getIPnum <- function (t) { if (length(grep(patIP,t,perl=TRUE)) == 0) {return (0)}
+                           else {
+                           return (length(gregexpr(patIP,t,perl=TRUE)[[1]]))
+                           }
+                         } # get # of IPs per text element
+getIPidx <- function (t) { return (gregexpr(patIP,t,perl=TRUE)[[1]]) } # get index of IPs in text element
+
+ipNum <- sapply(text, getIPnum, USE.NAMES = FALSE) # apply to the character vector
+ipIdx <- lapply(text, getIPidx) # maintain list structure of index for each IP log
+ipStr <- regmatches(text,ipIdx) # obtain IPs in list, multiple IPs per element stored in list items
+
+names(ipStr) <- text
+cat("The results of # of IPs in each text element (1:100):\n")
+print(ipNum[1:100])
+cat("The first 10 lines of results:\n")
+print(head(ipStr, n= 10))
+%% end.rcode
+
+
+
+
+\newpage
+
+\section*{Problem 3}
+
+The American Presidency Project at UCSB has the text from all of the State of the Union
+speeches by US presidents, in which the president speaks to Congress to report on the 
+situation in the country. We will use web scraping, text formatting and pattern matching 
+to grab the data; and then do some statistical analysis on them.
+
+\subsection*{(a)}
+
+From the website, I download the \textit{index.html} file and use pattern matching
+to pull out the individual URLs for each speech in order to download individual HTML files.
+Files are converted to UNIX line-ending using \textit{fromdos}.
+
+%% begin.rcode eval=FALSE, tidy=FALSE
+%% #### Download all html files
+%% system("wget -q -O 'index_pres.html' 
+%%         'http://www.presidency.ucsb.edu/sou.php#axzz265cEKp1a'")
+%% system("fromdos index_pres.html")
+%% indexPres <- readLines('index_pres.html',warn= FALSE)
+%% # Get speech text source
+%% patUrl1 <- 
+%% '\\s{16}<td width=\\"\\d{2}\\" align=\\"center\\" class=\\"doclist\\"><a href=\\"'
+%% indexPres <- indexPres[grep(patUrl1,indexPres,perl= TRUE)]
+%% indexPres <- sapply(indexPres, 
+%%                     function(x){gsub(patUrl1,"",x)},USE.NAMES= FALSE)
+%% patUrl2 <- '\\">\\d{4}<\\/a>(\\*|)<\\/td>'
+%% indexPres <- sapply(indexPres, 
+%%                     function(x){gsub(patUrl2,"",x)},USE.NAMES= FALSE)
+%% # Get file id from the source url
+%% patUrl3 <- 
+%% 'http:\\/\\/www\\.presidency\\.ucsb\\.edu\\/ws\\/index\\.php\\?pid='
+%% fileid <- sapply(indexPres, 
+%%                  function(x){gsub(patUrl3,"",x)},USE.NAMES= FALSE)
+%% # Download all files and convert to unix
+%% sapply(1:length(fileid),
+%%        function(i){
+%%        system(paste("wget -q -O '",fileid[i],".html' '",indexPres[i],"'",sep=""));
+%%        system(paste("fromdos ",fileid[i],".html",sep=""))})
+%% end.rcode
+
+
+\subsection*{(b)}
+
+For each speech, I use pattern matching to extract the body of the speech while retaining 
+the name of the president and the year of the speech. The function is applied with vector
+operations using \textit{sapply()}.
+
+For the \textit{speechVec}, text pre-processing is done by 
+\begin{enumerate}
+\item
+Replacing HTML line-end with UNIX ones 
+\item
+Removing all the HTML format operators
+\item
+Modifying all the HTML special characters to similar UTF-8 ones
+\end{enumerate}
+
+\newpage
+%% begin.rcode eval=FALSE
+%% # Import all *.html lines
+%%ff <- sapply(fileid, function(x){readLines(paste(x,".html",sep=""), warn= FALSE)})
+%% # Get the president name
+%%patName <- "^<title>(.*?)<\\/title>"
+%%namePres <- ff[grep(patName,ff,perl= TRUE)]
+%%namePres <- sapply(namePres, function(x){gsub(patName,"\\1",x)},USE.NAMES= FALSE)
+%%namePres <- sapply(namePres, function(x){return(unlist(strsplit(x, ":"))[1])},USE.NAMES= FALSE)
+%%# Get the talk date
+%%patDate <- '^.*<span class=\\"docdate\\">(.*?)<\\/span>.*$'
+%%dateTalk <- ff[grep(patDate,ff,perl= TRUE)]
+%%dateTalk <- sapply(dateTalk, function(x){gsub(patDate,"\\1",x)},USE.NAMES= FALSE)
+%%dateTalk <- sapply(dateTalk, function(x){gsub("^.*\\s","",x)},USE.NAMES= FALSE)
+%%# Get the speech content text and prune for nice-format print
+%%patText <- '^.*<span class=\\"displaytext\\">(.*?)<\\/span>.*$'
+%%speechVec <- ff[grep(patText,ff,perl= TRUE)]
+%%speechVec <- sapply(speechVec, function(x){gsub(patText,"\\1<p>",x)},USE.NAMES= FALSE) # grab speech text
+%%speechVec <- sapply(speechVec, function(x){gsub("(<p.*?>|<\\/p>|<br>)","\n",x)},USE.NAMES= FALSE) # for line ending
+%%speechVec <- sapply(speechVec, function(x){gsub("<.*?>","",x)},USE.NAMES= FALSE) # remove all html format
+%%speechVec <- sapply(speechVec, function(x){x <- gsub("&mdash;"," -- ",x);x <- gsub("&nbsp;","  ",x);
+%%                                           x <- gsub("&lsquo;"," ' ",x);     x <- gsub("&#8226;"," \\. ",x);
+%%                                           x <- gsub("&lt;"," < ",x);        x <- gsub("&deg;"," degree ",x);
+%%                                           x <- gsub("&pound;"," pound ",x); x <- gsub("&fra.*?;"," 1/2 ",x);
+%%                                           x <- gsub("&O.*?;","O",x);        x <- gsub("&e.*?;","e",x);                                     
+%%                                          },USE.NAMES= FALSE) # html special char
+%% end.rcode
+
+
+\subsection*{(c)}
+
+Each speech is stored as a single character vector with all non-text stripped out. The encoding is converted from
+WINDOWS-1251 to UTF-8.
+Meanwhile, the information about the tags of "Laughter" and "Applause" and the number of times it was used
+are kept as a record for each speech. The \textit{speechVec[i]} will be printed out in a nicely-formatted manner. 
+
+%% begin.rcode eval=FALSE
+%%# Remove audience response tags (laughter & applause)
+%%patLau <- '\\[.*?(Laughter|laughter).*?\\]'
+%%patApp <- '\\[.*?(Applause|applause).*?\\]'
+%%getlauNum <- function(x) {
+%%          if (length(gregexpr(patLau,x,perl= TRUE)[[1]]) == 1 &&
+%%              gregexpr(patLau,x,perl= TRUE)[[1]] == -1)         { return(0) }
+%%          else { return(length(gregexpr(patLau,x,perl= TRUE)[[1]]))}
+%%          } # get the number of [laughter]
+%%getappNum <- function(x) {
+%%          if (length(gregexpr(patApp,x,perl= TRUE)[[1]]) == 1 &&
+%%              gregexpr(patApp,x,perl= TRUE)[[1]] == -1)         { return(0) }
+%%          else { return(length(gregexpr(patApp,x,perl= TRUE)[[1]]))}
+%%          } # get the number of [applause]
+%%lauNum <- sapply(speechVec, getlauNum, USE.NAMES= FALSE)
+%%appNum <- sapply(speechVec, getappNum, USE.NAMES= FALSE)
+%%speechVec <- sapply(speechVec, function(x){iconv(x,from="WINDOWS-1251",to="UTF-8",sub = " ")})
+%%speechVec <- sapply(speechVec, function(x){x <- gsub(patLau,"",x,perl= TRUE);x <- gsub(patApp,"",x,perl= TRUE)})
+%%             # remove all the non-verbal tags from the speech text
+%%names(speechVec) <- NULL # clean the speechVec name (otherwise, long and messy)
+%% end.rcode
+
+
+\subsection*{(d)}
+
+The collection of speeches is stored in a clean fashion of list elements. The \textit{i}th entries of all the elements
+in \textit{listSpeech} give information about the \textit{i}th speech. 
+This is easy later for plotting variables changes over time.
+
+%% begin.rcode eval=FALSE
+%%listSpeech <- list()
+%%listSpeech$id <- fileid
+%%listSpeech$name <- namePres
+%%listSpeech$date <- as.integer(dateTalk) # conversion for plotting, sorting
+%%listSpeech$numLaughter <- lauNum
+%%listSpeech$numApplause <- appNum
+%%listSpeech$speech <- speechVec
+%% end.rcode
+
+
+\subsection*{(e) (f)}
+
+Words and sentences are extracted from each speech, and are stored as individual elements of a (rather long)
+character vector. Counts are also done on both words and sentences.
+
+\newpage
+%% begin.rcode eval=FALSE
+%%# Speech analysis
+%%# Grab words from the speech by replacing all non-word char with space and split
+%%getWords <- function(x){x <- gsub("'","",x, perl= TRUE); x <- gsub('\\W+'," ",x, perl= TRUE);
+%%                        xs <- unlist(strsplit(x, "[ ]+", perl= TRUE));return(xs[xs != ""])}
+%%# Grab sentences from the speech by spliting with ending chars like [.!?]
+%%getSents <- function(x){x <- gsub(" (Mr|Ms|Mrs|Dr|St|Sr|Jr)\\.","\\1",x, perl= TRUE);x <- gsub("[\\.!\\?][ \t]+","\n",x, perl= TRUE);
+%%                        xs <- unlist(strsplit(x, "\n", perl= TRUE));return(xs[xs != ""])}
+%%listSpeech$wc <- sapply(speechVec, function(x){return(length(getWords(x)))}, USE.NAMES= FALSE) # word count
+%%listSpeech$sc <- sapply(speechVec, function(x){return(length(getSents(x)))}, USE.NAMES= FALSE) # sentence count
+%%listSpeech$wMean <- sapply(speechVec, function(x){return(mean(nchar(getWords(x))))}, USE.NAMES= FALSE) #avg word length
+%%listSpeech$wSD <- sapply(speechVec, function(x){return(sd(nchar(getWords(x))))}, USE.NAMES= FALSE) # word length sd
+%%listSpeech$sMean <- sapply(speechVec, function(x){return(mean(nchar(getSents(x))))}, USE.NAMES= FALSE) # avg sentence length
+%%listSpeech$sSD <- sapply(speechVec, function(x){return(sd(nchar(getSents(x))))}, USE.NAMES= FALSE) # sentence length sd
+%% end.rcode
+
+
+
+\subsection*{(g) (h)}
+
+We now start to extract some features of interest from the speeches to analyze how the speeches have
+changed over time. The result of all this is a list with each element containing the information
+about a speech: the speech as a single string, the vector of sentences, the vector of words
+and the additional quantification of variables about the speech from (g) as well as
+the non-verbal variables from (c).
+
+\begin{enumerate}
+\item
+Length in words and sentences \textit{wc,sc}
+\item
+Average and SD of word and sentence lengths \textit{wMean,wSD,sMean,sSD}
+\item
+Number of quotations in each speech, mean length (in words), and SD of length (in words) of the 
+quotations in each speech \textit{quoNum,quoMean,quoSD}
+\item
+The most common meaningful words, where non-meaningful words are pre-defined \textit{cmw}
+\item
+Counts of the following words or word stems: 
+\scriptsize
+\begin{description}
+\item[I, we]
+\item[America{,n}]
+\item[democra{cy,tic}]
+\item[republic]
+\item[Democrat{,ic}]
+\item[Republican]
+\item[free{,dom}]
+\item[war]
+\item[God] -- not including God bless
+\item[God Bless]
+\item[{Jesus, Christ, Christian}]
+\item[Woman] -- I think would be interesting
+\end{description}
+\end{enumerate}
+\normalsize
+
+%% begin.rcode eval=FALSE
+%% tmpList <- matrix(rep(0, 226*15),nrow=226,ncol=15)
+%% ## Speech list with element-wise analysis
+%% speechList <- list() #empty list
+%% # Get the non-meaningful words file
+%% system("wget -O 'cmw.txt' 'http://www.textfixer.com/resources/common-english-words.txt'")
+%% commonWords <- readLines('cmw.txt', warn= FALSE)
+%% commonWords <- unlist(strsplit(commonWords, ",", perl= TRUE))
+%% # Element-wise analysis on each speech
+%%for (i in 1:length(fileid)) {
+%%	ss <- list() #empty list element
+%%	# Global attributes: from results before (reproduce for better storage)
+%%	ss$id <- fileid[i]
+%%	ss$name <- namePres[i]
+%%	ss$date <- as.integer(dateTalk[i])
+%%	ss$numLaughter <- lauNum[i]
+%%	ss$numApplause <- appNum[i]
+%%	ss$speech <- speechVec[i]	
+%%	# Indiv attributes: get from within each speech
+%%	talkWords <- getWords(speechVec[i]) 
+%%	talkSents <- getSents(speechVec[i])
+%%	ss$words <- talkWords # words vector
+%%	ss$sents <- talkSents # sentence vector	
+%%	ss$wc <- length(talkWords) # word count
+%%	ss$sc <- length(talkSents) # sentence count
+%%	ss$wMean <- mean(nchar(talkWords)) # avg word length
+%%	ss$wSD <- sd(nchar(talkWords)) # word length sd
+%%	ss$sMean <- mean(nchar(talkSents)) # avg sentence length
+%%	ss$sSD <- sd(nchar(talkSents)) # sentence length sd; ss[14]
+%%	patQuo <- '\"(.*?)\"' # quotation pattern
+%%	quo <- talkSents[grep(patQuo,talkSents,perl= TRUE)]
+%%	if (length(quo) != 0) { # get quotation attributes
+%%		quo <- sapply(quo, function(x){gsub(patQuo,"\\1",x)},USE.NAMES= FALSE)
+%%		ss$quoNum <- length(quo)
+%%		ss$quoMean <- mean(nchar(quo))
+%%		ss$quoSD <- sd(nchar(quo))
+%%	}
+%%	else{
+%%		ss$quoNum <- 0
+%%		ss$quoMean <- 0
+%%		ss$quoSD <- 0
+%%	} #ss[17]
+%%
+%%	cmw <- sort(table(talkWords), decreasing = TRUE) 
+%%	cmw <- cmw[which(!(names(cmw) %in% commonWords))] # get meaningful words
+%%	ss$cmw <- cmw[cmw >= 10] #arbitrary cut-off for display
+%%	ss$strIwe <- cmw[grep("^(I|[Ww]e)$",names(cmw))] #string 'I|We'; ss[19]
+%%	ss$strAme <- cmw[grep("[Aa]merica(|n)",names(cmw))] #string 'America'
+%%	ss$strDem <- cmw[grep("[Dd]emocra(cy|tic)",names(cmw))] #string 'democratic'
+%%	ss$strRep <- cmw[grep("[Rr]epublic(|n)",names(cmw))] #string 'republican'
+%%	ss$strFree <- cmw[grep("^[Ff]ree(|dom)$",names(cmw))] #string 'free'
+%%	ss$strWar <- cmw[grep("^[Ww]ar(|s)$",names(cmw))] #string 'war'
+%%	ss$strGod <- cmw[grep("^[Gg]od(|s)$",names(cmw))] #string 'God'
+%%	ss$strChr <- cmw[grep("(Jesus|Christ|Christian)",names(cmw))] #string 'Chirst|Jesus'
+%%	ss$strWoman <- cmw[grep("^[Ww]om[ae]n$",names(cmw))] #Mystring 'Woman'; ss[27]	
+%%	ssGodBless <- talkSents[grep("[Gg]od [Bb]less",talkSents, perl= TRUE)]
+%%	if (length(ssGodBless) != 0) { #string 'God Bless' from sentences
+%%	ss$strGodBless <- sapply(ssGodBless, 
+%%	                  function(x){
+%%                    return(length(gregexpr("[Gg]od [Bb]less",x,perl=TRUE)[[1]]))}, 
+%%	                  USE.NAMES= FALSE)
+%%	}else{	ss$strGodBless <- 0	}
+%%	# add to speechList and listSpeech
+%%	speechList[[i]] <- ss
+%%	tmpList[i, 1:3] <- unlist(ss[15:17]) #quo attr
+%%	tmpList[i, 4:13] <- sapply(ss[19:28],sum) #cmw related attr
+%%}
+%%# prepare for plotting, store as listSpeech elements
+%%listSpeech$quoNum <- tmpList[,1]
+%%listSpeech$quoMean <- tmpList[,2]
+%%listSpeech$quoSD <- tmpList[,3]
+%%listSpeech$strIwe <- tmpList[,4]
+%%listSpeech$strAme <- tmpList[,5]
+%%listSpeech$strDem <- tmpList[,6]
+%%listSpeech$strRep <- tmpList[,7]
+%%listSpeech$strFree <- tmpList[,8]
+%%listSpeech$strWar <- tmpList[,9]
+%%listSpeech$strGod <- tmpList[,10]
+%%listSpeech$strChr <- tmpList[,11]
+%%listSpeech$strWoman <- tmpList[,12]
+%%listSpeech$strGodBless <- tmpList[,13]
+%% end.rcode
+
+
+\subsection*{(i) (j)}
+
+Some basic plots that show how the variables have changed over time are given below.
+
+%% begin.rcode PS23-all, cache=TRUE, echo=FALSE, results="hide"
+rm(list=ls(all=TRUE)) #remove all objects
+#system("mkdir html")
+setwd("./html")
+
+# Download all html files
+#system("wget -q -O 'index_pres.html' 'http://www.presidency.ucsb.edu/sou.php#axzz265cEKp1a'")
+#system("fromdos index_pres.html")
+indexPres <- readLines('index_pres.html',warn= FALSE)
+# Get speech text source
+patUrl1 <- '\\s{16}<td width=\\"\\d{2}\\" align=\\"center\\" class=\\"doclist\\"><a href=\\"'
+indexPres <- indexPres[grep(patUrl1,indexPres,perl= TRUE)]
+indexPres <- sapply(indexPres, function(x){gsub(patUrl1,"",x)},USE.NAMES= FALSE)
+patUrl2 <- '\\">\\d{4}<\\/a>(\\*|)<\\/td>'
+indexPres <- sapply(indexPres, function(x){gsub(patUrl2,"",x)},USE.NAMES= FALSE)
+# Get file id from the source url
+patUrl3 <- 'http:\\/\\/www\\.presidency\\.ucsb\\.edu\\/ws\\/index\\.php\\?pid='
+fileid <- sapply(indexPres, function(x){gsub(patUrl3,"",x)},USE.NAMES= FALSE)
+# Download all files and convert to unix
+#sapply(1:length(fileid),
+#       function(i){system(paste("wget -q -O '",fileid[i],".html' '",indexPres[i],"'",sep=""));
+#                   system(paste("fromdos ",fileid[i],".html",sep=""))})
+
+ff <- sapply(fileid, function(x){readLines(paste(x,".html",sep=""), warn= FALSE)})
+
+# Get the president name
+patName <- "^<title>(.*?)<\\/title>"
+namePres <- ff[grep(patName,ff,perl= TRUE)]
+namePres <- sapply(namePres, function(x){gsub(patName,"\\1",x)},USE.NAMES= FALSE)
+namePres <- sapply(namePres, function(x){return(unlist(strsplit(x, ":"))[1])},USE.NAMES= FALSE)
+# Get the talk date
+patDate <- '^.*<span class=\\"docdate\\">(.*?)<\\/span>.*$'
+dateTalk <- ff[grep(patDate,ff,perl= TRUE)]
+dateTalk <- sapply(dateTalk, function(x){gsub(patDate,"\\1",x)},USE.NAMES= FALSE)
+dateTalk <- sapply(dateTalk, function(x){gsub("^.*\\s","",x)},USE.NAMES= FALSE)
+# Get the speech content text and prune for nice-format print
+patText <- '^.*<span class=\\"displaytext\\">(.*?)<\\/span>.*$'
+speechVec <- ff[grep(patText,ff,perl= TRUE)]
+speechVec <- sapply(speechVec, function(x){gsub(patText,"\\1<p>",x)},USE.NAMES= FALSE) # grab speech text
+speechVec <- sapply(speechVec, function(x){gsub("(<p.*?>|<\\/p>|<br>)","\n",x)},USE.NAMES= FALSE) # for line ending
+speechVec <- sapply(speechVec, function(x){gsub("<.*?>","",x)},USE.NAMES= FALSE) # remove all html format
+speechVec <- sapply(speechVec, function(x){x <- gsub("&mdash;"," -- ",x);
+                                           x <- gsub("&nbsp;","  ",x);
+                                           x <- gsub("&lsquo;"," ' ",x);
+                                           x <- gsub("&#8226;"," \\. ",x);
+                                           x <- gsub("&lt;"," < ",x);
+                                           x <- gsub("&deg;"," degree ",x);
+                                           x <- gsub("&pound;"," pound ",x);  
+                                           x <- gsub("&fra.*?;"," 1/2 ",x);
+                                           x <- gsub("&O.*?;","O",x);
+                                           x <- gsub("&e.*?;","e",x);                                     
+                                          },USE.NAMES= FALSE) # html special char
+# Remove audience response tags (laughter & applause)
+patLau <- '\\[.*?(Laughter|laughter).*?\\]'
+patApp <- '\\[.*?(Applause|applause).*?\\]'
+getlauNum <- function(x) {
+          if (length(gregexpr(patLau,x,perl= TRUE)[[1]]) == 1 &&
+              gregexpr(patLau,x,perl= TRUE)[[1]] == -1)         { return(0) }
+          else { return(length(gregexpr(patLau,x,perl= TRUE)[[1]]))}
+          }
+getappNum <- function(x) {
+          if (length(gregexpr(patApp,x,perl= TRUE)[[1]]) == 1 &&
+              gregexpr(patApp,x,perl= TRUE)[[1]] == -1)         { return(0) }
+          else { return(length(gregexpr(patApp,x,perl= TRUE)[[1]]))}
+          }
+lauNum <- sapply(speechVec, getlauNum, USE.NAMES= FALSE)
+appNum <- sapply(speechVec, getappNum, USE.NAMES= FALSE)
+
+speechVec <- sapply(speechVec, function(x){iconv(x,from="WINDOWS-1251",to="UTF-8",sub = " ")})
+speechVec <- sapply(speechVec, function(x){x <- gsub(patLau,"",x,perl= TRUE);
+                                           x <- gsub(patApp,"",x,perl= TRUE)})
+names(speechVec) <- NULL
+listSpeech <- list()
+listSpeech$id <- fileid
+listSpeech$name <- namePres
+listSpeech$date <- as.integer(dateTalk)
+listSpeech$numLaughter <- lauNum
+listSpeech$numApplause <- appNum
+listSpeech$speech <- speechVec
+
+# Speech analysis
+getWords <- function(x){x <- gsub("'","",x, perl= TRUE);
+                        x <- gsub('\\W+'," ",x, perl= TRUE);
+                        xs <- unlist(strsplit(x, "[ ]+", perl= TRUE))
+                        return(xs[xs != ""])}
+getSents <- function(x){x <- gsub(" (Mr|Ms|Mrs|Dr|St|Sr|Jr)\\.","\\1",x, perl= TRUE);
+                        x <- gsub("[\\.!\\?][ \t]+","\n",x, perl= TRUE);
+                        xs <- unlist(strsplit(x, "\n", perl= TRUE));
+                        return(xs[xs != ""])}
+listSpeech$wc <- sapply(speechVec, function(x){return(length(getWords(x)))}, USE.NAMES= FALSE)
+listSpeech$sc <- sapply(speechVec, function(x){return(length(getSents(x)))}, USE.NAMES= FALSE)
+listSpeech$wMean <- sapply(speechVec, function(x){return(mean(nchar(getWords(x))))}, USE.NAMES= FALSE)
+listSpeech$wSD <- sapply(speechVec, function(x){return(sd(nchar(getWords(x))))}, USE.NAMES= FALSE)
+listSpeech$sMean <- sapply(speechVec, function(x){return(mean(nchar(getSents(x))))}, USE.NAMES= FALSE)
+listSpeech$sSD <- sapply(speechVec, function(x){return(sd(nchar(getSents(x))))}, USE.NAMES= FALSE)
+tmpList <- matrix(rep(0, 226*15),nrow=226,ncol=15)
+
+# Speech list with element-wise analysis
+speechList <- list()
+#system("wget -q -O 'common_words.txt' 'http://www.textfixer.com/resources/common-english-words.txt'")
+commonWords <- readLines('common_words.txt', warn= FALSE)
+commonWords <- unlist(strsplit(commonWords, ",", perl= TRUE))
+for (i in 1:length(fileid)) {
+	ss <- list()
+	# Global attr
+	ss$id <- fileid[i]
+	ss$name <- namePres[i]
+	ss$date <- as.integer(dateTalk[i])
+	ss$numLaughter <- lauNum[i]
+	ss$numApplause <- appNum[i]
+	ss$speech <- speechVec[i]
+	
+	# Indiv attr
+	talkWords <- getWords(speechVec[i]) 
+	talkSents <- getSents(speechVec[i])
+	ss$words <- talkWords
+	ss$sents <- talkSents
+	
+	ss$wc <- length(talkWords)
+	ss$sc <- length(talkSents)
+	ss$wMean <- mean(nchar(talkWords))
+	ss$wSD <- sd(nchar(talkWords))
+	ss$sMean <- mean(nchar(talkSents))
+	ss$sSD <- sd(nchar(talkSents)) #ss[14]
+	
+	patQuo <- '\"(.*?)\"'
+	quo <- talkSents[grep(patQuo,talkSents,perl= TRUE)]
+	if (length(quo) != 0) {
+		quo <- sapply(quo, function(x){gsub(patQuo,"\\1",x)},USE.NAMES= FALSE)
+		ss$quoNum <- length(quo)
+		ss$quoMean <- mean(nchar(quo))
+		ss$quoSD <- sd(nchar(quo))
+	}
+	else{
+		ss$quoNum <- 0
+		ss$quoMean <- 0
+		ss$quoSD <- 0
+	} #ss[17]
+	
+	cmw <- sort(table(talkWords), decreasing = TRUE)
+	cmw <- cmw[which(!(names(cmw) %in% commonWords))]
+	ss$cmw <- cmw[cmw >= 10] #arbitrary cut-off
+	ss$strIwe <- cmw[grep("^(I|[Ww]e)$",names(cmw))] #ss[19]
+	ss$strAme <- cmw[grep("[Aa]merica(|n)",names(cmw))]
+	ss$strDem <- cmw[grep("[Dd]emocra(cy|tic)",names(cmw))]
+	ss$strRep <- cmw[grep("[Rr]epublic(|n)",names(cmw))]
+	ss$strFree <- cmw[grep("^[Ff]ree(|dom)$",names(cmw))]
+	ss$strWar <- cmw[grep("^[Ww]ar(|s)$",names(cmw))]
+	ss$strGod <- cmw[grep("^[Gg]od(|s)$",names(cmw))]
+	ss$strChr <- cmw[grep("(Jesus|Christ|Christian)",names(cmw))]
+	ss$strWoman <- cmw[grep("^[Ww]om[ae]n$",names(cmw))] #ss[27]
+	
+	ssGodBless <- talkSents[grep("[Gg]od [Bb]less",talkSents, perl= TRUE)]
+	if (length(ssGodBless) != 0) {
+	ss$strGodBless <- sapply(ssGodBless, 
+	                         function(x){return(length(gregexpr("[Gg]od [Bb]less",x,perl=TRUE)[[1]]))}, 
+	                         USE.NAMES= FALSE)
+	}else{
+	ss$strGodBless <- 0
+	}
+		
+	# add to speechList and listSpeech
+	speechList[[i]] <- ss
+	tmpList[i, 1:3] <- unlist(ss[15:17]) #quo
+	tmpList[i, 4:13] <- sapply(ss[19:28],sum) #cmw
+}
+
+listSpeech$quoNum <- tmpList[,1]
+listSpeech$quoMean <- tmpList[,2]
+listSpeech$quoSD <- tmpList[,3]
+listSpeech$strIwe <- tmpList[,4]
+listSpeech$strAme <- tmpList[,5]
+listSpeech$strDem <- tmpList[,6]
+listSpeech$strRep <- tmpList[,7]
+listSpeech$strFree <- tmpList[,8]
+listSpeech$strWar <- tmpList[,9]
+listSpeech$strGod <- tmpList[,10]
+listSpeech$strChr <- tmpList[,11]
+listSpeech$strWoman <- tmpList[,12]
+listSpeech$strGodBless <- tmpList[,13]
+%% end.rcode
+
+
+%% begin.rcode PS23-fig, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=5, fig.align="center"
+# Create plots
+attach(listSpeech)
+plotTitle1 = "Presidential Speech Statistics Over Time"; xlab="Year"
+# over time
+layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE)); par(cex.main= 1)
+typ="h"; col="blue"; lwd=6; 
+plot(date,wc, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Word Count")
+typ="b";lwd=2;col="brown"
+plot(date,wMean, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Avg Word Length")
+plot(date,wSD, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Word Length Std Dev")
+%% end.rcode
+
+We can see that the word counts of the speeches are higher prior to 1920s than the modern ages.
+So does the avg word length and word length sd. The presidents nowadays seem to like brevity.
+
+
+Similar plots for sentence counts and quotation counts are given below. The similar trends stand.
+
+%% begin.rcode PS23-fig2, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=5, fig.align="center"
+layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE)); par(cex.main= 1)
+typ="h"; col="blue"; lwd=6; 
+plot(date,sc, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Sentence Count")
+typ="b";lwd=2;col="brown"
+plot(date,sMean, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Avg Sentence Length")
+plot(date,sSD, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Sentence Length Std Dev")
+
+layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE)); par(cex.main= 1)
+typ="h";lwd=6;col="blue"
+plot(date,quoNum, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Quotation Count")
+typ="b";lwd=2;col="brown"
+plot(date,quoMean, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Avg Quotation Length")
+plot(date,quoSD, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Quotation Length Std Dev")
+%% end.rcode
+
+In recent years, with full records of non-verbal attributes, we can see that [Laughter] and [Applause] counts
+have some positive correlation. The speeches receive more responses from the audience around 2000 than other years.
+
+
+%% begin.rcode PS23-fig3, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=4.5, fig.align="center"
+# recent years
+plotTitle2 = "Presidential Speech Statistics in Modern U.S.A."
+recY <- 1: max(c(which(numLaughter > 0),which(numApplause > 0)))
+typ="h";lwd=6;col="blue"
+par(mfrow=c(2,1),cex.main= 1)
+plot(date[recY],numLaughter[recY], type=typ,col=col,lwd=lwd, main=plotTitle2,xlab=xlab,ylab="Laughter Count")
+plot(date[recY],numApplause[recY], type=typ,col=col,lwd=lwd, main=plotTitle2,xlab=xlab,ylab="Applause Count")
+%% end.rcode
+
+And for presidents since Franklin Roosevelt in 1932, comparison between Republican presidents 
+(Eisenhower, Nixon, Ford, Reagan, G. Bush, G.W. Bush) and Democratic presidents 
+(Roosevelt, Truman, Kennedy, Johnson, Carter, Clinton, Obama) are also given below in the box-plot comparison.
+
+
+
+%% begin.rcode PS23-figRD, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=12, fig.align="center"
+# Rep vs Dem
+plotTitle3 = "Republican vs. Democratic Presidential Speech Statistics (Since 1932)"
+repPres <- c("Dwight D. Eisenhower", "Richard Nixon", "Gerald R. Ford", 
+             "Ronald Reagan", "George Bush", "George W. Bush")
+demPres <- c("Franklin D. Roosevelt", "Harry S. Truman", "John F. Kennedy", 
+             "Lyndon B. Johnson", "Jimmy Carter", "William J. Clinton", "Barack Obama")
+repY <- which(name %in% repPres)
+demY <- which(name %in% demPres)
+layout(matrix(1:16, 8, 2)); par(mar= c(1.5,6,1.5,6))
+col="blue";cex= 0.6
+boxplot(wc[repY],col=col,ylim=c(2000,10000)); legend("topleft", "Rep. Word Count",cex=cex)
+boxplot(sc[repY],col=col,ylim=c(100,800)); legend("topleft", "Rep. Sentence Count",cex=cex)
+boxplot(quoNum[repY],col=col,ylim=c(0,12)); legend("topleft", "Rep. Quotation Count",cex=cex)
+boxplot(numLaughter[repY],col=col,ylim=c(0,8)); legend("topleft", "Rep. Laughter Count",cex=cex)
+boxplot(numApplause[repY],col=col,ylim=c(0,4)); legend("topleft", "Rep. Applause Count",cex=cex)
+boxplot(wMean[repY],col=col); legend("topleft", "Rep. Avg Word Length",cex=cex)
+boxplot(sMean[repY],col=col,ylim=c(90,150)); legend("topleft", "Rep. Avg Sentence Length",cex=cex)
+boxplot(quoMean[repY],col=col,ylim=c(0,400)); legend("topleft", "Rep. Avg Quotation Length",cex=cex)
+col="brown";cex= 0.6
+boxplot(wc[demY],col=col,ylim=c(2000,10000)); legend("topleft", "Dem. Word Count",cex=cex)
+boxplot(sc[demY],col=col,ylim=c(100,800)); legend("topleft", "Dem. Sentence Count",cex=cex)
+boxplot(quoNum[demY],col=col,ylim=c(0,12)); legend("topleft", "Dem. Quotation Count",cex=cex)
+boxplot(numLaughter[demY],col=col,ylim=c(0,8)); legend("topleft", "Dem. Laughter Count",cex=cex)
+boxplot(numApplause[demY],col=col,ylim=c(0,4)); legend("topleft", "Dem. Applause Count",cex=cex)
+boxplot(wMean[demY],col=col); legend("topleft", "Dem. Avg Word Length",cex=cex)
+boxplot(sMean[demY],col=col,ylim=c(90,150)); legend("topleft", "Dem. Avg Sentence Length",cex=cex)
+boxplot(quoMean[demY],col=col,ylim=c(0,400)); legend("topleft", "Dem. Avg Quotation Length",cex=cex)
+%% end.rcode
+
+\newpage
+Some additional research with plotting that illustrates how the speeches have changed over time are shown below.
+The different keywords have evolved over time, with peak in WAR during wartime and GOD-rich in recent years.
+
+
+%% begin.rcode PS23-ex1, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=9.5, fig.align="center"
+# extra
+par(mfrow=c(6,1),cex= 0.5, cex.main= 1)
+typ="h"; col="blue"; lwd=6;
+par(mar= c(0.5,6,4,6)); plot(date,strIwe, type=typ,col=col,lwd=lwd, main=plotTitle1,ylab="'I''We' Count")
+par(mar= c(0.5,6,0.5,6)); plot(date,strAme, type=typ,col=col,lwd=lwd, ylab="'America' Count")
+par(mar= c(0.5,6,0.5,6)); plot(date,strFree, type=typ,col=col,lwd=lwd, ylab="'Free/dom' Count")
+par(mar= c(0.5,6,0.5,6)); plot(date,strWar, type=typ,col=col,lwd=lwd, ylab="'War' Count")
+par(mar= c(0.5,6,0.5,6)); plot(date,strGod, type=typ,col=col,lwd=lwd, ylab="'God' Count") 
+par(mar= c(4,6,0.5,6)); plot(date,strWoman, type=typ,col=col,lwd=lwd, xlab=xlab,ylab="'Woman' Count")
+%% end.rcode
+
+The comparison between Reps and Dems could be more interesting with the strings REPUBLICAN and DEMOCRATIC.
+It seems that the Dems are more focused on their persuit while Reps are impartial to both words.
+
+%% begin.rcode PS23-ex2, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=5, fig.height=3.5, fig.align="center"
+par(mfrow=c(2,2), mar= c(1,2,1,2)); cex=1
+col="blue";
+boxplot(strRep[repY],col=col,ylim=c(0,15)); legend("topleft", "Rep. 'Rep' Count",cex=cex)
+col="purple"
+boxplot(strDem[repY],col=col,ylim=c(0,15)); legend("topleft", "Rep. 'Dem' Count",cex=cex)
+boxplot(strRep[demY],col=col,ylim=c(0,15)); legend("topleft", "Dem. 'Rep' Count",cex=cex)
+col="brown";
+boxplot(strDem[demY],col=col,ylim=c(0,15)); legend("topleft", "Dem. 'Dem' Count",cex=cex)
+%% end.rcode
+
+
+Some additional variables that quantify speech in interesting ways are produced. The number of digits shown within the
+speech is a good indicator whether the president speaks more quantatively, or vice versa, more qualitatively.
+
+%% begin.rcode PS23-ex3, echo=FALSE, results="hide", cache=TRUE, dev='cairo_pdf', fig.width=8, fig.height=4.5, fig.align="center"
+getDigts <- function(x){x <- gsub("(\\d)[,\\.](\\d)","\\1\\2",x, perl= TRUE);
+                        x <- gsub("\\D","\n",x, perl= TRUE);
+                        xs <- unlist(strsplit(x, "\n", perl= TRUE));
+                        return(xs[xs != ""])}
+listSpeech$dc <- sapply(speechVec, function(x){return(length(getDigts(x)))}, USE.NAMES= FALSE)
+typ="h"; col="blue"; lwd=6; 
+plot(date,listSpeech$dc, type=typ,col=col,lwd=lwd, main=plotTitle1,xlab=xlab,ylab="Digits Count")
+%% end.rcode
+
+
+
+
+
+
+
+
+
+
+\end{document}
