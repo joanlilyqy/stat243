@@ -29,11 +29,9 @@ for (i in 1:length(IDsB)) {
 	tmpwt[ IDsB[[i]] ] <- wgtsB[[i]]
 	wtidB[ ,i] <- tmpwt
 }
-mixmeanB2 <- colSums(muB*wtidB, na.rm = TRUE)
+#mixmeanB2 <- colSums(muB*wtidB, na.rm = TRUE)
 
-
-
-# (d)
+# (d) efficiency comparison
 system.time(mixmeanA <- mapply(function(x, y) sum(muA[x]*y), IDsA, wgtsA))
 system.time(mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE))
 all.equal(mixmeanA, mixmeanA2)
