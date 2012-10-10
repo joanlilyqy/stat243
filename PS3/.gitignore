@@ -1,5 +1,7 @@
 *.bak
 *.prof
 *.log
+*.Rout
+.RData
 cache/*
 figure/*

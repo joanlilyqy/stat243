@@ -6,7 +6,7 @@
 rm(list=ls(all=TRUE)) # remove all objects
 source("cscFromC.R")
 
-### (a)
+### (a) R version of makeCSC
 makeCSCr <- function(matT){
 	matCSC = list()
 	dimInfo <- which(matT != 0, arr.ind = TRUE) # array indices info (row, col)
@@ -20,7 +20,6 @@ makeCSCr <- function(matT){
 library(Matrix)
 makeCSCr2 <- function(matT){
 	matCSC = list()
-#	dimInfo <- which(matT != 0, arr.ind = TRUE) # array indices info (row, col)
 	M <- as(matT, "dgCMatrix")
 	matCSC$values <- M@x #non-zero matrix entries 
 	matCSC$rowIndices <- M@i + 1 # row indices
@@ -28,7 +27,19 @@ makeCSCr2 <- function(matT){
   return(matCSC)
 }
 
+###### compare the CSC representation of matrix
+compMat <- function(m1, m2){ 
+	flag = all.equal(m1$values, m2$values)
+	flag = flag && all.equal(m1$rowIndices, m2$rowIndices)
+	flag = flag && all.equal(m1$colPointers, m2$colPointers)
+	return(flag)
+}
+
+
 ############## Test ##################
+### (d) memory usage
+gc()
+
 #m <- makeTestMatrix(4)
 #m <- makeTestMatrix(2500)
 m <- makeTestMatrix(10000)
@@ -36,22 +47,29 @@ m <- makeTestMatrix(10000)
 #m <- matrix(c(1,0,1,0,0,0,1,0,0), nr=3)
 #m <- matrix(c(1,0,1,1,0,0,0,0,0), nr=3)
 
-### (b)
-system.time(c <- makeCSC(m))
-system.time(r <- makeCSCr(m))
-all.equal(c, r)
+gc()
+system.time(mr <- makeCSCr(m))
+gc()
+
+### (b) profiling for performance improvement
+system.time(mc <- makeCSC(m))
+compMat(mc, mr)
+gc()
 
 Rprof("makeCSCr.prof", interval = 0.01)
-system.time(r2 <- makeCSCr2(m))
+system.time(mr2 <- makeCSCr2(m))
+Rprof(NULL)
 summaryRprof("makeCSCr.prof")
-all.equal(c, r2)
+compMat(mc, mr2)
+gc()
 
 ### (c) byte compiling
 library(compiler)
 makeCSCrCMP <- cmpfun(makeCSCr)
 makeCSCrCMP # notice the indication that the function is byte compiled.
-system.time(rcmp <- makeCSCrCMP(m))
-all.equal(c, rcmp)
+system.time(mrcmp <- makeCSCrCMP(m))
+compMat(mc, mrcmp)
+gc()
 
 
 
