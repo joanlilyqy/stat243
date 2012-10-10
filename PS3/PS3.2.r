@@ -17,6 +17,7 @@ makeCSCr <- function(matT){
 }
 
 ### (b) # more efficient after Rprof() and improvement in coding
+library(Matrix)
 makeCSCr2 <- function(matT){
 	matCSC = list()
 #	dimInfo <- which(matT != 0, arr.ind = TRUE) # array indices info (row, col)
@@ -36,19 +37,21 @@ m <- makeTestMatrix(10000)
 #m <- matrix(c(1,0,1,1,0,0,0,0,0), nr=3)
 
 ### (b)
-system.time(makeCSC(m))
+system.time(c <- makeCSC(m))
 system.time(r <- makeCSCr(m))
+all.equal(c, r)
 
 Rprof("makeCSCr.prof", interval = 0.01)
 system.time(r2 <- makeCSCr2(m))
 summaryRprof("makeCSCr.prof")
+all.equal(c, r2)
 
 ### (c) byte compiling
 library(compiler)
-makeCSCrc <- cmpfun(makeCSCr)
-makeCSCrc # notice the indication that the function is byte compiled.
-system.time(r <- makeCSCr(m))
-system.time(rc <- makeCSCrc(m))
+makeCSCrCMP <- cmpfun(makeCSCr)
+makeCSCrCMP # notice the indication that the function is byte compiled.
+system.time(rcmp <- makeCSCrCMP(m))
+all.equal(c, rcmp)
 
 
 
