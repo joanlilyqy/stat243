@@ -3,6 +3,10 @@
 #### Problem Set 3
 #### 2. CSC matrix 
 
+library(Matrix)
+library(compiler)
+library(rbenchmark)
+
 rm(list=ls(all=TRUE)) # remove all objects
 source("cscFromC.R")
 
@@ -17,7 +21,6 @@ makeCSCr <- function(matT){
 }
 
 ### (b) # more efficient after Rprof() and improvement in coding
-library(Matrix)
 makeCSCr2 <- function(matT){
 	matCSC = list()
 	M <- as(matT, "dgCMatrix")
@@ -38,7 +41,7 @@ compMat <- function(m1, m2){
 
 ############## Test ##################
 ### (d) memory usage
-gc()
+gc() #initial
 
 #m <- makeTestMatrix(4)
 #m <- makeTestMatrix(2500)
@@ -46,34 +49,32 @@ m <- makeTestMatrix(10000)
 #m <- matrix(c(1,0,0,7,0,2,0,0,0,0,0,0,0,0,0,4), nr=4)
 #m <- matrix(c(1,0,1,0,0,0,1,0,0), nr=3)
 #m <- matrix(c(1,0,1,1,0,0,0,0,0), nr=3)
+gc() # with m
 
-gc()
 system.time(mr <- makeCSCr(m))
-gc()
+gc() # after mr
 
 ### (b) profiling for performance improvement
 system.time(mc <- makeCSC(m))
 compMat(mc, mr)
-gc()
+gc() # after mc
 
 Rprof("makeCSCr.prof", interval = 0.01)
 system.time(mr2 <- makeCSCr2(m))
 Rprof(NULL)
 summaryRprof("makeCSCr.prof")
 compMat(mc, mr2)
-gc()
+gc() # after mr2
 
 ### (c) byte compiling
-library(compiler)
 makeCSCrCMP <- cmpfun(makeCSCr)
 makeCSCrCMP # notice the indication that the function is byte compiled.
 system.time(mrcmp <- makeCSCrCMP(m))
 compMat(mc, mrcmp)
-gc()
+gc() # after mrcmp
 
 
-
-
-
+######## benchmark ##########
+benchmark(makeCSC(m), makeCSCr(m), makeCSCr2(m), makeCSCrCMP(m), replications = 2)
 
 
