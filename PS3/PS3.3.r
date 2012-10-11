@@ -43,7 +43,6 @@ m #showcase
 ########test#########
 m <- matrix(1:25, nr=5) # simple test matrix
 m
-lower.tri(m) <- c(1,2,3)
 lower.tri(m) <- 1:10 ; 	m
 lower.tri(m, byrow = TRUE) <- 1:10 ; m
-
+lower.tri(m) <- c(1,2,3)
