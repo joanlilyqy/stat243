@@ -3,9 +3,9 @@
 #### Problem Set 3
 #### 3. Set: lower.triangle( matrix ) = transpose( upper.triangle( matrix ) ) 
 
-rm(list=ls(all=TRUE)) # remove all objects
+rm(list = ls(all = TRUE)) # remove all objects
 
-m <- matrix(1:25, nr=5) # simple test matrix
+m <- matrix(1:25, nr = 5) # simple test matrix
 m #showcase
 
 ### (a)
@@ -14,7 +14,7 @@ m #showcase
 # m[upper.tri(m)] # convert to col-major vector (should be row-major conversion here)
 
 ### (b)
-m <- matrix(1:25, nr=5) # simple test matrix
+m <- matrix(1:25, nr = 5) # simple test matrix
 m #debug
 m[lower.tri(m)] #debug, col-major
 m[upper.tri(m)] #debug, col-major
@@ -27,13 +27,13 @@ m[lower.tri(m)] <- t(m)[lower.tri(m)] # this works
 m #showcase
 
 ### (c)
-"lower.tri<-" <- function(x, byrow = FALSE, value){ #replacement function for lower.tri
+`lower.tri<-` <- function(x, byrow = FALSE, value){ #replacement function for lower.tri
 	x <- as.matrix(x)
 	if ( length(x[lower.tri(x)]) != length(value) ) stop("Vector length mismatch!")
 	
 	if (!byrow)	x[lower.tri(x)] <- value
 	else {
-		tmpx <- t(x)
+		tmpx <- t(x) # no replacement function for t()
 		tmpx[upper.tri(tmpx)] <- value
 		x <- t(tmpx)
 	}
@@ -41,7 +41,7 @@ m #showcase
 }
 
 ########test#########
-m <- matrix(1:25, nr=5) # simple test matrix
+m <- matrix(1:25, nr = 5) # simple test matrix
 m
 lower.tri(m) <- 1:10 ; 	m
 lower.tri(m, byrow = TRUE) <- 1:10 ; m

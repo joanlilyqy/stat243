@@ -10,11 +10,9 @@ rm(list = ls(all = TRUE)) # remove all objects
 rnd <- rnorm(10000) # rnd sample
 rnd <- rnd[rnd > 0] # prob > 0
 
-p = 3
+p = 3 # num of states
 x0 <- rep(0, p); x0[1] <- 1; # initialize with starting from state 1
-x <- sample(rnd, p) # get length-p vector of rnds
 xm <- matrix(sample(rnd, p*p), nr = p) # get p-by-p matrix of rnds
-x <- x / sum(x) # normalize
 xm <- xm / rowSums(xm) # normalize rows
 
 
@@ -60,7 +58,7 @@ mkcS3
 runSteps <- function(object, ...) UseMethod("runSteps") 
 
 # creating a specific method for the MarkovS3 class
-runSteps.MarkovS3 <- function(obj, n = 1) {
+runSteps.MarkovS3 <- function(obj, n = 1) { # return a MarkovS3 obj after n steps
 	# check validity
 	if (class(obj) != 'MarkovS3') stop("Not valid on non-MarkovS3 objects!")
 	# otherwise, we assume the P and init is already checked during construction
@@ -75,12 +73,13 @@ runSteps.MarkovS3 <- function(obj, n = 1) {
 
 mkcS30 <- MarkovS3(x0, xm)
 mkcS30
-mkcS31 <- runSteps(mkcS30)
+mkcS31 <- runSteps(mkcS30) # n = 1
 identical(mkcS3, mkcS31)
 
 ##########(b)
 # class-specific operators
 `+.MarkovS3` <- function(obj, incr) {
+	# check validity
 	if (class(obj) != 'MarkovS3') stop("Not valid on non-MarkovS3 objects!")
 	if (incr < 0) stop("Need positive integer steps!")
 	
@@ -91,9 +90,10 @@ identical(mkcS3, mkcS31)
 }
 
 `-.MarkovS3` <- function(obj, decr) {
+	# check validity
 	if (class(obj) != 'MarkovS3') stop("Not valid on non-MarkovS3 objects!")
 	if (decr < 0) stop("Need positive integer steps!")
-	if (obj$n < decr) stop("Not enough steps to remove!")	
+	if (obj$n < decr) stop("Not enough steps of states to remove!")	
 	
 	obj$n <- obj$n - as.integer(decr)
 	# ????????????? how to improve
@@ -104,6 +104,7 @@ identical(mkcS3, mkcS31)
 }
 
 `[.MarkovS3` <- function(obj, idVec) {
+	# check validity
 	if (class(obj) != 'MarkovS3') stop("Not valid on non-MarkovS3 objects!")
 	ids = length(idVec); mx = as.integer(max(idVec)); 
 	if (ids < 1 || length(idVec[idVec < 0]) > 0) stop("Not valid indices")	
@@ -115,7 +116,7 @@ identical(mkcS3, mkcS31)
 		Pseq <- Pseq %*% obj$P
 		umat[i, ] <- as.vector(Pseq)
 	}
-	return(umat[idVec, ])	
+	return(umat[idVec, ])
 }
 
 

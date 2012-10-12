@@ -3,11 +3,11 @@
 #### Problem Set 3
 #### 2. CSC matrix 
 
-library(Matrix)
+library(Matrix) # sparse matrix package
 library(compiler)
 library(rbenchmark)
 
-rm(list=ls(all=TRUE)) # remove all objects
+rm(list = ls(all = TRUE)) # remove all objects
 source("cscFromC.R")
 
 ### (a) R version of makeCSC
@@ -43,9 +43,8 @@ compMat <- function(m1, m2){
 ### (d) memory usage
 gc() #initial
 
-#m <- makeTestMatrix(4)
-#m <- makeTestMatrix(2500)
-m <- makeTestMatrix(10000)
+m <- makeTestMatrix(2500)
+#m <- makeTestMatrix(10000)
 #m <- matrix(c(1,0,0,7,0,2,0,0,0,0,0,0,0,0,0,4), nr=4)
 #m <- matrix(c(1,0,1,0,0,0,1,0,0), nr=3)
 #m <- matrix(c(1,0,1,1,0,0,0,0,0), nr=3)
