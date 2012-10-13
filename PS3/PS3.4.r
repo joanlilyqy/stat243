@@ -25,6 +25,7 @@ xm <- xm / rowSums(xm) # normalize rows
 #########    (a)    ##########
 ### create the Markov S3 class
 ### initial state, transition matrix, num of steps, current state and [if needed, chain]
+### vector, matrix, numeric, vector and [matrix]
 
 runSteps <- function(object, ...) UseMethod("runSteps") # generic method
 ### creating a specific "runSteps" method for the MarkovS3 class construction
@@ -46,8 +47,7 @@ runSteps.MarkovS3 <- function(obj) {
             for (i in 1:obj$n) obj$chain[i + 1, ] <- as.vector(obj$chain[i, ] %*% obj$P)
             obj$u <- obj$chain[obj$n + 1, ]
           } else {
-            obj$u <- obj$u %*% ( obj$P %^% obj$n)
-            obj$u <- as.vector(obj$u)
+            obj$u <- as.vector(obj$u %*% ( obj$P %^% obj$n))
             # directly propagate the Markov chain n steps, no intermediate steps stored
           }
           return(obj)
@@ -123,7 +123,7 @@ mkc2
 	if (obj$stChain) {
             obj$u <- obj$chain[obj$n + 1, ]
             obj$chain <- obj$chain[1:(obj$n + 1), ]
-            if (obj$n == 0) obj$chain <- matrix(obj$init, nr = 1)
+            if (obj$n == 0) obj$chain <- matrix(obj$chain, nr = 1)
         } else {
             obj$u <- as.vector(solve(t(obj$P %^% decr), obj$u))
             # directly remove the Markov chain decr steps, no intermediate steps stored
@@ -150,17 +150,17 @@ mkc0 <- MarkovS3(x0, xm)
 mkc1 <- MarkovS3(x0, xm, 1)
 mkc2 <- MarkovS3(x0, xm, 2)
 mkc4 <- MarkovS3(x0, xm, 4)
-identical(mkc1, mkc1 + 0)
-identical(mkc1, mkc0 + 1)
-identical(mkc4, mkc2 + 2)
-identical(mkc4, mkc1 + 3) # ???
-identical(mkc4, mkc0 + 4)
+all.equal(mkc1, mkc1 + 0)
+all.equal(mkc1, mkc0 + 1)
+all.equal(mkc4, mkc2 + 2)
+all.equal(mkc4, mkc1 + 3) 
+all.equal(mkc4, mkc0 + 4)
 
-identical(mkc1, mkc4 - 3) # ???
-identical(mkc2, mkc4 - 2) # ???
-identical(mkc1, mkc2 - 1) # ???
-identical(mkc4, mkc4 - 0)
-identical(mkc0, mkc4 - 4)
+all.equal(mkc1, mkc4 - 3) 
+all.equal(mkc2, mkc4 - 2) 
+all.equal(mkc1, mkc2 - 1) 
+all.equal(mkc4, mkc4 - 0)
+all.equal(mkc0, mkc4 - 4)
 
 mkc0[0]
 mkc1[0:1]
@@ -189,9 +189,6 @@ mkc4[1:3]
 #########    (c)    ##########
 #### Markov chain S3 class-specific functions
 plot.MarkovS3 <- function(obj, ...) {
-	# check validity
-	if (class(obj) != 'MarkovS3') stop("Not valid on non-MarkovS3 objects!")
-	
 	if (obj$n == 0){
 		cat("The current state is the same as the initial state\n")
 		print(obj$u)
@@ -209,24 +206,20 @@ plot.MarkovS3 <- function(obj, ...) {
 }
 
 summary.MarkovS3 <- function(obj, ...) {
-	# check validity
-	if (class(obj) != 'MarkovS3') stop("Not valid on non-MarkovS3 objects!")
-	
 	cat("The initial state of the Markov chain is\n"); print(obj$init)
 	cat("The transition matrix of this chain is\n"); print(obj$P)
 	cat("The current step is", obj$n, ", and the current state is\n"); print(obj$u)
-	
+        if (obj$stChain) cat("The whole chain is stored.\n")
+
 	#the empirical transition probabilities and empirical state probabilities (proportion of the time spent in each state).
 }
 
 print.MarkovS3 <- function(obj, ...) {
-	# check validity
-	if (class(obj) != 'MarkovS3') stop("Not valid on non-MarkovS3 objects!")
-	
 	cat("Initial state\n"); print(obj$init)
 	cat("Transition matrix\n"); print(obj$P)
 	cat("Current step\n"); print(obj$n)
 	cat("Current state\n"); print(obj$u)
+        if (obj$stChain) cat("The whole chain is stored.\n")
 }
 
 
