@@ -42,12 +42,12 @@ for (i in 1:idnum) {
 #mixmeanB2 <- colSums(muB*wtidB)
 
 # (d) efficiency comparison
-benchmark({mixmeanA<-sapply(1:length(IDsA), function(i){return(sum(muA[IDsA[[i]]]*wgtsA[[i]]))})},
-          {mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)}, replications = 5)
+benchmark(A1 = {mixmeanA<-sapply(1:length(IDsA), function(i){return(sum(muA[IDsA[[i]]]*wgtsA[[i]]))})},
+          A2 = {mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)}, replications = 5)
 all.equal(mixmeanA, mixmeanA2)
 
-benchmark({mixmeanB<-sapply(1:length(IDsB), function(i){return(sum(muB[IDsB[[i]]]*wgtsB[[i]]))})},
-          {mixmeanB2 <- colSums(muB*wtidB)}, replications = 5)
+benchmark(B1 = {mixmeanB<-sapply(1:length(IDsB), function(i){return(sum(muB[IDsB[[i]]]*wgtsB[[i]]))})},
+          B2 = {mixmeanB2 <- colSums(muB*wtidB)}, replications = 5)
 all.equal(mixmeanB, mixmeanB2)
 
 

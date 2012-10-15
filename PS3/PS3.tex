@@ -1,0 +1,126 @@
+\documentclass{article}
+
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{\today}
+\chead{Ying Qiao SID:21412301}
+\rhead{Stat243 Fa12: Problem Set 3}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+
+%% for inline R code: if the inline code is not correctly parsed, you will see a message
+\newcommand{\rinline}[1]{SOMETHING WORNG WITH knitr}
+%% begin.rcode setup, include=FALSE
+% opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-')
+%% end.rcode
+
+
+\begin{document}
+\section*{Problem 1}
+
+Within \textit{mixtureMean.RData}, there are two test cases (A with large number of components \textit{K}; 
+and B with small \textit{K}) consisting of a vector of $\mu$ values, a list of weights and a list of IDs that
+map the weights to the corresponding components in the mean vector.
+
+\subsection*{(a)}
+One line code using \textit{sapply()} that will calculate the weighted mean $\sum_{k=1}^{m_i} w_{i,k}\mu_{ID_{i,k}}$.
+
+%% begin.rcode PS31-0, cache=TRUE, results="hide"
+%%#### Problem Set 3
+%%#### 1. mixtureMean
+%%library(rbenchmark)
+%%rm(list = ls(all = TRUE)) # remove all objects
+%%load('mixtureMean.RData') # import data
+%% end.rcode
+
+%% begin.rcode, cache=FALSE, eval=FALSE, results="hide"
+%%# (a) original data storage
+%%mixmeanA <- sapply(1:length(IDsA), function (i){return(sum(muA[IDsA[[i]]]*wgtsA[[i]]))}) # sapply test case A
+%%mixmeanB <- sapply(1:length(IDsB), function (i){return(sum(muB[IDsB[[i]]]*wgtsB[[i]]))}) # sapply test case B
+%% end.rcode
+
+\subsection*{(b)}
+I set up the objects under case A as two matrices, one storing the $\mu$ values used for calcuation and one
+storing the corresponding weights for those mean values. The size of the these two matrices are the same,
+which is $n \times max(m_i)$, i.e. the number of observations times the maximum number of components per observation.
+
+%% begin.rcode PS31-b, cache=TRUE, results="hide"
+%%# (b) data setup for A: K=1000
+%%# table out as matrix storing the mu[ids]/wgts in cols for each observation row
+idnum <- length(IDsA)
+idlen <- sapply(1:idnum, function(i){return(length(IDsA[[i]]))})
+maxmi <- max(idlen)
+
+muidA <- matrix(as.numeric(NA), nr = idnum, nc = maxmi)
+for (i in 1:idnum) {
+	muidA[i, 1:idlen[i] ] <- muA[IDsA[[i]]]
+}
+wtidA <- matrix(as.numeric(NA), nr = idnum, nc = maxmi)
+for (i in 1:idnum) {
+	wtidA[i, 1:idlen[i] ] <- wgtsA[[i]]
+}
+mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)
+%% end.rcode
+
+\subsection*{(c)}
+The set up of data objects under case B is even simpler. As $K=10$ which is small, I just use a $n \times K$ matrix to
+store all the weights for the observations of the mean vector, leaving the untouched components with weight 0.
+
+%% begin.rcode PS31-c, cache=TRUE, results="hide"
+%%# (c) data setup for B: K=10
+%%# small K can allow us to store all the IDs as truth table for each u
+idnum <- length(IDsB)
+munum <- length(muB) # K is small
+
+wtidB <- matrix(0, nr = munum, nc = idnum)
+for (i in 1:idnum) {
+	tmpwt <- rep(0, munum)
+	tmpwt[ IDsB[[i]] ] <- wgtsB[[i]]
+	wtidB[ ,i] <- tmpwt
+}
+mixmeanB2 <- colSums(muB*wtidB)
+%% end.rcode
+
+\subsection*{(d)}
+The comparison for the two test cases are shown below using benchmarking functions.
+
+%% begin.rcode PS31-d, cache=TRUE, results="markup"
+%%# (d) efficiency comparison
+# (d) efficiency comparison
+benchmark(A1 = {mixmeanA<-sapply(1:length(IDsA), function(i){return(sum(muA[IDsA[[i]]]*wgtsA[[i]]))})},
+          A2 = {mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)}, replications = 5)
+all.equal(mixmeanA, mixmeanA2)
+
+benchmark(B1 = {mixmeanB<-sapply(1:length(IDsB), function(i){return(sum(muB[IDsB[[i]]]*wgtsB[[i]]))})},
+          B2 = {mixmeanB2 <- colSums(muB*wtidB)}, replications = 5)
+all.equal(mixmeanB, mixmeanB2)
+%% end.rcode
+
+We can see that there is about 50X to 70X speed-up compared to the original case, which shows the 
+advantages of re-arranging the data objects.
+
+\newpage
+\section*{Problem 2}
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
