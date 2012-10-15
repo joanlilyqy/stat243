@@ -33,15 +33,15 @@ Within \textit{mixtureMean.RData}, there are two test cases (A with large number
 and B with small \textit{K}) consisting of a vector of $\mu$ values, a list of weights and a list of IDs that
 map the weights to the corresponding components in the mean vector.
 
-\subsection*{(a)}
+\subsubsection*{(a)}
 One line code using \textit{sapply()} that will calculate the weighted mean $\sum_{k=1}^{m_i} w_{i,k}\mu_{ID_{i,k}}$.
 
 %% begin.rcode PS31-0, cache=TRUE, results="hide"
 %%#### Problem Set 3
 %%#### 1. mixtureMean
-%%library(rbenchmark)
-%%rm(list = ls(all = TRUE)) # remove all objects
-%%load('mixtureMean.RData') # import data
+library(rbenchmark)
+rm(list = ls(all = TRUE)) # remove all objects
+load('mixtureMean.RData') # import data
 %% end.rcode
 
 %% begin.rcode, cache=FALSE, eval=FALSE, results="hide"
@@ -50,7 +50,7 @@ One line code using \textit{sapply()} that will calculate the weighted mean $\su
 %%mixmeanB <- sapply(1:length(IDsB), function (i){return(sum(muB[IDsB[[i]]]*wgtsB[[i]]))}) # sapply test case B
 %% end.rcode
 
-\subsection*{(b)}
+\subsubsection*{(b)}
 I set up the objects under case A as two matrices, one storing the $\mu$ values used for calcuation and one
 storing the corresponding weights for those mean values. The size of the these two matrices are the same,
 which is $n \times max(m_i)$, i.e. the number of observations times the maximum number of components per observation.
@@ -61,7 +61,6 @@ which is $n \times max(m_i)$, i.e. the number of observations times the maximum 
 idnum <- length(IDsA)
 idlen <- sapply(1:idnum, function(i){return(length(IDsA[[i]]))})
 maxmi <- max(idlen)
-
 muidA <- matrix(as.numeric(NA), nr = idnum, nc = maxmi)
 for (i in 1:idnum) {
 	muidA[i, 1:idlen[i] ] <- muA[IDsA[[i]]]
@@ -73,7 +72,7 @@ for (i in 1:idnum) {
 mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)
 %% end.rcode
 
-\subsection*{(c)}
+\subsubsection*{(c)}
 The set up of data objects under case B is even simpler. As $K=10$ which is small, I just use a $n \times K$ matrix to
 store all the weights for the observations of the mean vector, leaving the untouched components with weight 0.
 
@@ -82,7 +81,6 @@ store all the weights for the observations of the mean vector, leaving the untou
 %%# small K can allow us to store all the IDs as truth table for each u
 idnum <- length(IDsB)
 munum <- length(muB) # K is small
-
 wtidB <- matrix(0, nr = munum, nc = idnum)
 for (i in 1:idnum) {
 	tmpwt <- rep(0, munum)
@@ -92,18 +90,21 @@ for (i in 1:idnum) {
 mixmeanB2 <- colSums(muB*wtidB)
 %% end.rcode
 
-\subsection*{(d)}
+\subsubsection*{(d)}
 The comparison for the two test cases are shown below using benchmarking functions.
 
-%% begin.rcode PS31-d, cache=TRUE, results="markup"
+%% begin.rcode PS31-d, cache=TRUE, results="markup", tidy = FALSE
 %%# (d) efficiency comparison
 # (d) efficiency comparison
-benchmark(A1 = {mixmeanA<-sapply(1:length(IDsA), function(i){return(sum(muA[IDsA[[i]]]*wgtsA[[i]]))})},
-          A2 = {mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)}, replications = 5)
+benchmark(A1 = {mixmeanA <- sapply(1:length(IDsA), 
+                            function(i){ return( sum(muA[IDsA[[i]]]*wgtsA[[i]]) ) })},
+          A2 = {mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)}, 
+          replications = 5)
 all.equal(mixmeanA, mixmeanA2)
-
-benchmark(B1 = {mixmeanB<-sapply(1:length(IDsB), function(i){return(sum(muB[IDsB[[i]]]*wgtsB[[i]]))})},
-          B2 = {mixmeanB2 <- colSums(muB*wtidB)}, replications = 5)
+benchmark(B1 = {mixmeanB <- sapply(1:length(IDsB), 
+                            function(i){ return( sum(muB[IDsB[[i]]]*wgtsB[[i]]) ) })},
+          B2 = {mixmeanB2 <- colSums(muB*wtidB)}, 
+          replications = 5)
 all.equal(mixmeanB, mixmeanB2)
 %% end.rcode
 
@@ -112,14 +113,188 @@ advantages of re-arranging the data objects.
 
 \newpage
 \section*{Problem 2}
+The CSC (compressed sparse column) format for storing sparse matrices has three components:
+\small
+\begin{description}
+\item \textit{values}: a vector of non-zero entries, stored with column major ordering
+\item \textit{rowIndices}: a vector of row indices, one for each non-zero entry
+\item \textit{colPointers}: a vector of entry index at which each column starts (length of $ncol + 1$)
+\end{description}
+\normalsize
+
+%% begin.rcode PS32-0, cache=TRUE, results="hide", message=FALSE
+%%#### Problem Set 3
+%%#### 2. CSC matrix 
+library(Matrix) # sparse matrix package
+library(compiler)
+library(rbenchmark)
+rm(list = ls(all = TRUE)) # remove all objects
+source("cscFromC.R")
+%% end.rcode
+
+\subsubsection*{(a)}
+I re-write the C-style \textit{makeCSC()} function as below.
+
+%% begin.rcode, cache=FALSE, results="markup"
+%%### (a) R version of makeCSC
+makeCSCr <- function(matT){
+	matCSC = list()
+	dimInfo <- which(matT != 0, arr.ind = TRUE) # array indices info (row, col)
+	matCSC$values <- matT[dimInfo] #non-zero matrix entries 
+	matCSC$rowIndices <- dimInfo[ ,1] # row indices
+	matCSC$colPointers <- c(1, cumsum(tabulate(dimInfo[ ,2], nbins = ncol(matT)))+1 ) # cumsum the num of entries in each col
+  return(matCSC)
+}
+m <- matrix(c(1,0,0,7,0,2,0,0,0,0,0,0,0,0,0,4), nr=4)
+makeCSCr(m)
+%% end.rcode
+
+\subsubsection*{(b)}
+I used the profiling tool to assess the computation bottleneck of my function, which is shown below.
+I generated the test matrices using the \textit{makeTestMatrix()} function provided in \textit{cscFromC.R}.
+
+%% begin.rcode PS32-b, cache=TRUE, results="markup"
+m <- makeTestMatrix(2500)
+Rprof("makeCSCr.prof", interval = 0.01)
+system.time(mr <- makeCSCr(m))
+Rprof(NULL)
+summaryRprof("makeCSCr.prof")$by.self
+%% end.rcode
+
+So, an improved version is shown below with built-in packages.
+%% begin.rcode, cache=FALSE, results="markup"
+%%### (b) # more efficient after Rprof() and improvement in coding
+makeCSCr2 <- function(matT){
+	matCSC = list()
+	M <- as(matT, "dgCMatrix")
+	matCSC$values <- M@x #non-zero matrix entries 
+	matCSC$rowIndices <- M@i + 1 # row indices
+	matCSC$colPointers <- M@p + 1 # cumsum the num of entries in each col
+  return(matCSC)
+}
+m <- matrix(c(1,0,0,7,0,2,0,0,0,0,0,0,0,0,0,4), nr=4)
+makeCSCr2(m)
+%% end.rcode
+
+\subsubsection*{(c)}
+The speed test for C-style, original R-style, package-based R-style and byte-compiled R is shown below.
+I have also made a comparison function for checking the accuracy of the functions written in different styles.
+%% begin.rcode PS32-c, cache=TRUE, results="markup"
+compMat <- function(m1, m2){ # compare the CSC representation of matrix
+	flag = all.equal(m1$values, m2$values)
+	flag = flag && all.equal(m1$rowIndices, m2$rowIndices)
+	flag = flag && all.equal(m1$colPointers, m2$colPointers)
+	return(flag)
+}
+makeCSCrCMP <- cmpfun(makeCSCr) # byte compiled
+%%############## Test ##################
+m <- makeTestMatrix(6400)
+
+system.time(mc <- makeCSC(m))
+system.time(mr <- makeCSCr(m))
+compMat(mc, mr)
+
+%%######## benchmark ##########
+benchmark(makeCSC(m), makeCSCr(m), makeCSCr2(m), makeCSCrCMP(m), replications = 2,
+          columns = c("test", "replications", "elapsed", "relative", "user.self", "sys.self"))
+%% end.rcode
+
+We can see that the pakage-based R-style code runs the fastest, that byte-compiled version runs slightly
+faster than the original one and that C-style code runs the slowest.
+
+\subsubsection*{(d)}
+In my R-style \textit{makeCSCr()} function, there is no additional copy of the full matrix or other matrices
+of that same size. The result is shown below with the \textit{gc()} function.
+
+%% begin.rcode PS32-d, cache=TRUE, results="markup"
+%%### (d) memory usage
+gc() #initial
+m <- makeTestMatrix(2500)
+gc() # with m
+system.time(mr <- makeCSCr(m))
+gc() # after mr
+%% end.rcode
 
 
+\newpage
+\section*{Problem 3}
+We would like to set the lower triangle of a matrix to equal the transpose of the upper triangle.
+
+%% begin.rcode PS33-0, cache=TRUE, results="hide", message=FALSE
+%%#### Problem Set 3
+%%#### 3. lower.triangle(mat) = transpose(upper.triangle(mat)) 
+rm(list = ls(all = TRUE)) # remove all objects
+m <- matrix(1:25, nr = 5) # simple test matrix
+%% end.rcode
+
+\subsubsection*{(a)}
+The code shown below does not work. As R uses column-major ordering to store matrix entries, when extracted
+using \textit{upper.tri()}, the ordering is messed up as shown below inline with the diagnosis code.
+
+%% begin.rcode PS33-a, cache=FALSE, results="markup"
+m <- matrix(1:25, nr = 5) # simple test matrix
+m #showcase
+%%### (a)
+m[lower.tri(m)] = t(m[upper.tri(m)]) # this code does not work
+m #showcase
+# should be row-major conversion here for substitution
+m[upper.tri(m)] # convert to col-major vector     
+%% end.rcode
+
+\subsubsection*{(b)}
+The working code is shown below with inline explaination of how it works. The main idea is to extract the 
+extries from the transposed matrix to perserve the row-major ordering of the original matrix.
+
+%% begin.rcode PS33-b, cache=FALSE, results="markup"
+%%### (b)
+m <- matrix(1:25, nr = 5) # simple test matrix
+m #debug
+m[upper.tri(m)] #debug, col-major
+%%### after examination, we have to get row-major upper tirangle
+t(m) # transpose of orignal m
+t(m)[lower.tri(m)] # col-major of t(m) = row-major of m
+%%### the working one-line code to do the job
+m #showcase
+m[lower.tri(m)] <- t(m)[lower.tri(m)] # this code works
+m #showcase
+%% end.rcode
+
+\subsubsection*{(c)}
+The \textit{lower.tri<-} replacement function is shown below. The optional \textit{byrow} argument is 
+similar to that in \textit{matrix()}, which let the function to fill the martix with row-major ordering when TRUE.
+
+%% begin.rcode PS33-c, cache=FALSE, results="markup", tidy = FALSE
+%%### (c)
+`lower.tri<-` <- function(x, byrow = FALSE, value){ 
+    #replacement function for lower.tri
+    
+    x <- as.matrix(x)
+    
+    if ( length(x[lower.tri(x)]) != length(value) ) 
+      stop("Vector length mismatch!")
+	
+    if (!byrow)	x[lower.tri(x)] <- value # col-major
+    else { # row-major
+        tmpx <- t(x) # no replacement function for t()
+        tmpx[upper.tri(tmpx)] <- value
+        x <- t(tmpx)
+    }
+    return(x)
+}
+
+%%########test#########
+m <- matrix(1:25, nr = 5) # simple test matrix
+m
+lower.tri(m) <- 1:10 ; 	m
+lower.tri(m, byrow = TRUE) <- 1:10 ; m
+lower.tri(m) <- c(1,2,3)
+%% end.rcode
 
 
-
-
-
-
+\newpage
+\section*{Problem 4}
+For the object-oriented coding to generate a Markov chain with a fixed number of states, I choose to use the 
+widely accepted and fast speed S3 class.
 
 
 
