@@ -63,13 +63,13 @@ idlen <- sapply(1:idnum, function(i){return(length(IDsA[[i]]))})
 maxmi <- max(idlen)
 muidA <- matrix(as.numeric(NA), nr = idnum, nc = maxmi)
 for (i in 1:idnum) {
-	muidA[i, 1:idlen[i] ] <- muA[IDsA[[i]]]
+	muidA[i, 1:idlen[i] ] <- IDsA[[i]]
 }
 wtidA <- matrix(as.numeric(NA), nr = idnum, nc = maxmi)
 for (i in 1:idnum) {
 	wtidA[i, 1:idlen[i] ] <- wgtsA[[i]]
 }
-mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)
+mixmeanA2 <- rowSums(muA[muidA]*wtidA, na.rm = TRUE)
 %% end.rcode
 
 \subsubsection*{(c)}
@@ -98,7 +98,7 @@ The comparison for the two test cases are shown below using benchmarking functio
 # (d) efficiency comparison
 benchmark(A1 = {mixmeanA <- sapply(1:length(IDsA), 
                             function(i){ return( sum(muA[IDsA[[i]]]*wgtsA[[i]]) ) })},
-          A2 = {mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)}, 
+          A2 = {mixmeanA2 <- rowSums(muA[muidA]*wtidA, na.rm = TRUE)}, 
           replications = 5)
 all.equal(mixmeanA, mixmeanA2)
 benchmark(B1 = {mixmeanB <- sapply(1:length(IDsB), 
@@ -108,7 +108,7 @@ benchmark(B1 = {mixmeanB <- sapply(1:length(IDsB),
 all.equal(mixmeanB, mixmeanB2)
 %% end.rcode
 
-We can see that there is about 50X to 100X speed-up compared to the original case, which shows the 
+We can see that there is about 10X (b) and 100X (c) speed-up compared to the original case, which shows the 
 advantages of re-arranging the data objects.
 
 \newpage
@@ -137,16 +137,16 @@ I re-write the C-style \textit{makeCSC()} function as below.
 
 %% begin.rcode, cache=FALSE, results="markup"
 %%### (a) R version of makeCSC
-makeCSCr <- function(matT){
-	matCSC = list()
-	dimInfo <- which(matT != 0, arr.ind = TRUE) # array indices info (row, col)
-	matCSC$values <- matT[dimInfo] #non-zero matrix entries 
-	matCSC$rowIndices <- dimInfo[ ,1] # row indices
-	matCSC$colPointers <- c(1, cumsum(tabulate(dimInfo[ ,2], nbins = ncol(matT)))+1 ) # cumsum the num of entries in each col
-  return(matCSC)
-}
-m <- matrix(c(1,0,0,7,0,2,0,0,0,0,0,0,0,0,0,4), nr=4)
-makeCSCr(m)
+%%makeCSCr <- function(matT){
+%%	matCSC = list()
+%%	dimInfo <- which(matT != 0, arr.ind = TRUE) # array indices info (row, col)
+%%	matCSC$values <- matT[dimInfo] #non-zero matrix entries 
+%%	matCSC$rowIndices <- dimInfo[ ,1] # row indices
+%%	matCSC$colPointers <- c(1, cumsum(tabulate(dimInfo[ ,2], nbins = ncol(matT)))+1 ) # cumsum the num of entries in each col
+%%  return(matCSC)
+%%}
+%%m <- matrix(c(1,0,0,7,0,2,0,0,0,0,0,0,0,0,0,4), nr=4)
+%%makeCSCr(m)
 %% end.rcode
 
 \subsubsection*{(b)}
@@ -154,26 +154,26 @@ I used the profiling tool to assess the computation bottleneck of my function, w
 I generated the test matrices using the \textit{makeTestMatrix()} function provided in \textit{cscFromC.R}.
 
 %% begin.rcode PS32-b, cache=TRUE, results="markup"
-m <- makeTestMatrix(2500)
-Rprof("makeCSCr.prof", interval = 0.01)
-system.time(mr <- makeCSCr(m))
-Rprof(NULL)
-summaryRprof("makeCSCr.prof")$by.self
+%%m <- makeTestMatrix(2500)
+%%Rprof("makeCSCr.prof", interval = 0.01)
+%%system.time(mr <- makeCSCr(m))
+%%Rprof(NULL)
+%%summaryRprof("makeCSCr.prof")$by.self
 %% end.rcode
 
 So, an improved version is shown below with built-in packages.
 %% begin.rcode, cache=FALSE, results="markup"
 %%### (b) # more efficient after Rprof() and improvement in coding
-makeCSCr2 <- function(matT){
-	matCSC = list()
-	M <- as(matT, "dgCMatrix")
-	matCSC$values <- M@x #non-zero matrix entries 
-	matCSC$rowIndices <- M@i + 1 # row indices
-	matCSC$colPointers <- M@p + 1 # cumsum the num of entries in each col
-  return(matCSC)
-}
-m <- matrix(c(1,0,0,7,0,2,0,0,0,0,0,0,0,0,0,4), nr=4)
-makeCSCr2(m)
+%%makeCSCr2 <- function(matT){
+%%	matCSC = list()
+%%	M <- as(matT, "dgCMatrix")
+%%	matCSC$values <- M@x #non-zero matrix entries 
+%%	matCSC$rowIndices <- M@i + 1 # row indices
+%%	matCSC$colPointers <- M@p + 1 # cumsum the num of entries in each col
+%%  return(matCSC)
+%%}
+%%m <- matrix(c(1,0,0,7,0,2,0,0,0,0,0,0,0,0,0,4), nr=4)
+%%makeCSCr2(m)
 %% end.rcode
 
 \subsubsection*{(c)}
@@ -237,7 +237,7 @@ m #showcase
 %%### (a)
 m[lower.tri(m)] = t(m[upper.tri(m)]) # this code does not work
 m #showcase
-# should be row-major conversion here for substitution
+%%# should be row-major conversion here for substitution
 m[upper.tri(m)] # convert to col-major vector     
 %% end.rcode
 

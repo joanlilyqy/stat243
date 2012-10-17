@@ -20,13 +20,13 @@ maxmi <- max(idlen)
 
 muidA <- matrix(as.numeric(NA), nr = idnum, nc = maxmi)
 for (i in 1:idnum) {
-	muidA[i, 1:idlen[i] ] <- muA[IDsA[[i]]]
+	muidA[i, 1:idlen[i] ] <- IDsA[[i]]
 }
 wtidA <- matrix(as.numeric(NA), nr = idnum, nc = maxmi)
 for (i in 1:idnum) {
 	wtidA[i, 1:idlen[i] ] <- wgtsA[[i]]
 }
-#mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)
+#mixmeanA2 <- rowSums(muA[muidA]*wtidA, na.rm = TRUE)
 
 # (c) data setup for B: K=10
 # small K can allow us to store all the IDs as truth table for each u
@@ -43,7 +43,7 @@ for (i in 1:idnum) {
 
 # (d) efficiency comparison
 benchmark(A1 = {mixmeanA<-sapply(1:length(IDsA), function(i){return(sum(muA[IDsA[[i]]]*wgtsA[[i]]))})},
-          A2 = {mixmeanA2 <- rowSums(muidA*wtidA, na.rm = TRUE)}, replications = 5)
+          A2 = {mixmeanA2 <- rowSums(muA[muidA]*wtidA, na.rm = TRUE)}, replications = 5)
 all.equal(mixmeanA, mixmeanA2)
 
 benchmark(B1 = {mixmeanB<-sapply(1:length(IDsB), function(i){return(sum(muB[IDsB[[i]]]*wgtsB[[i]]))})},
