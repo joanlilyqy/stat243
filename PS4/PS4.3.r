@@ -5,51 +5,48 @@
 
 rm(list = ls(all = TRUE)) # remove all objects
 
+#### pseudo-code
+# W = t(chol(S)) ### S = W %*% t(W)
+# t(X) %*% S^(-1) %*% X %*% beta = t(X) %*% S^(-1) %*% Y
+# t(X) %*% (W %*% t(W))^(-1) %*% X %*% beta = t(X) %*% (W %*% t(W))^(-1) %*% Y
+# t(X) %*% t(W)^(-1) %*% W^(-1) %*% X %*% beta = t(X) %*% t(W)^(-1) %*% W^(-1) %*% Y
+# t(X^*) %*% X^* %*% beta = t(X^*) %*% Y^*			#### X^* = W^(-1) %*% X;	Y^* = W^(-1) %*% Y
+# Reduced to OLS:
+# X^*.qr = qr(X^*); 
+# Q = qr.Q(X^*.qr);  R = qr.R(X^*.qr) #### Q: orthogonal; R: upper triangular
+# t(X^*) %*% X^* %*% beta = t(X^*) %*% Y^*
+# t(R) %*% t(Q) %*% Q %*% R %*% beta = t(R) %*% t(Q) %*% Y
+# R %*% beta = t(Q) %*% Y
+
+#### test-code
 n <- 2000
 p <- 200
+scale <- 2; #debug
+n <- n/scale; p <- p/scale;
 
 Z <- matrix(abs(rnorm(n^2)), n)
-SIGMA <- crossprod(Z)/max(Z)
+S <- crossprod(Z)/max(Z)
 X <- matrix(rnorm(n*p)*10, n)
-Y <- rnorm(p)*100
+Y <- matrix(rnorm(n)*100, n)
 
 gls <- function(X,S,Y){
-	beta <- 0
+	W <- t(chol(S)) ### S = W %*% t(W)
+	X_s <- solve(W, X) #### X^* = W^(-1) %*% X
+	Y_s <- solve(W, Y) #### Y^* = W^(-1) %*% Y
+	X_s.qr <- qr(X_s)
+	Q = qr.Q(X_s.qr)
+	R = qr.R(X_s.qr)
+	beta <- backsolve(R, crossprod(Q,Y))	
 	return(beta)
 }
-### calculate A^(-1)*B
-## (1) use LU
-LU <- function(A, B){
-	solve(A, B)
+
+beta_hat <- function(X,S,Y){
+	Xt <- t(X)
+	Sinv <- solve(S)
+	beta <- solve(Xt %*% Sinv %*% X) %*% Xt %*% Sinv %*% Y
+	return(beta)
 }
 
-## (2) use inverse
-INV <- function(A, B){
-	V <- solve(A)
-	V %*% B
-}
 
-## (3) use Cholesky
-Chol <- function(A, B){
-	U <- chol(A)
-	backsolve(U, backsolve(U, B, transpose = TRUE))
-}
-
-function (formula, data, W) 
-{
-    Y <- model.response(m)
-    X <- model.matrix(Terms, m, contrasts)
-    n <- nrow(X)
-    if (any(dim(W) != c(n, n))) 
-        stop("dim(W) is not correct")
-    eW <- eigen(W, TRUE)
-    d <- eW$values
-    if (any(d <= 0)) 
-        stop("'W' is not positive definite")
-    A <- diag(d^(-0.5)) %*% t(eW$vector)
-    Ainv <- eW$vector %*% diag(d^(0.5))
-    fit <- lm.fit(A %*% X, A %*% Y, method = method, ...)
-
-}
-
+benchmark(gls(X,S,Y), beta_hat(X,S,Y), replications = 5)[1:6]
 
