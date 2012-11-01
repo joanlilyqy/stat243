@@ -88,7 +88,7 @@ for (i in 1:1){ #debug
 		cat("n =",nn,"and p =",pp,":\n")
 		cat("LU O[f(n)]:  ", format(LU_O,  width = 16,justify = 'right'),"\n");
 		cat("INV O[f(n)]: ", format(INV_O, width = 16,justify = 'right'),"\n");
-		cat("Chol O[f(n)]:", format(Chol_O,width = 16,justify = 'right'),"\n");
+		cat("Chol O[f(n)]:", format(Chol_O,width = 16,justify = 'right'),"\n"); ### ???
 
 		Z <- matrix(rnorm(nn^2), nn)
 		A <- crossprod(Z) #test matrix A
@@ -99,4 +99,6 @@ for (i in 1:1){ #debug
 }
 
 ## (h)
-
+# LU(X_future)  = LU(B^*) + LU(x) = 3p*n^2/2 -p*n/2 ~ O[(3n/2-1/2)*pn]
+# INV(X_future) = INV(X) = p*n^2 ~O[n*pn]
+# should use INV for calculating future B_j (j=1,2,...)
