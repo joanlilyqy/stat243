@@ -1,0 +1,366 @@
+\documentclass{article}
+
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{\today}
+\chead{Ying Qiao SID:21412301}
+\rhead{Stat243 Fa12: Problem Set 4}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+\lstset{
+	frame=tb,
+	language=c,
+	aboveskip=3mm,
+	belowskip=3mm,
+	basicstyle={\small\ttfamily},
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	prebreak=\textbackslash,
+	showstringspaces=false,
+	columns=fullflexible,
+	upquote=true
+	}
+
+%% for inline R code: if the inline code is not correctly parsed, you will see a message
+\newcommand{\rinline}[1]{SOMETHING WORNG WITH knitr}
+%% begin.rcode setup, include=FALSE
+% opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-')
+%% end.rcode
+
+
+\begin{document}
+\section*{Problem 1}
+
+When adding the number 1 to 10000 copies of the number $1 \times 10^{-15}$, the answer mathematically is 
+$1 + 1 \times 10^{-11} = 1.00000000001$. However, in order to explore computer represented arithmetics, 
+we want to use this as an example of the accuracy of summation with numbers of very different magnitudes.
+
+\subsubsection*{(a)}
+Asumming we do not carry out the calculations in a dumb way, the best precision we can expect of our result
+will be the \textit{double.eps}=\rinline{.Machine$double.eps}, i.e. 16 decimal places.
+
+%% begin.rcode PS41-a, cache=TRUE, results="hide", echo=FALSE
+%%#### Problem Set 4
+%%#### 1. add numbers of different sizes
+rm(list = ls(all = TRUE)) # remove all objects
+options(digits = 22)
+%% end.rcode
+
+\subsubsection*{(b)}
+As shown in the results below, using \textit{sum()} does not give the right answer (16 decimal places), but only
+10 decimal places.
+
+%% begin.rcode PS41-b, cache=TRUE, results="markup"
+%%# (b) 
+x <- c(1, rep(1e-15, 10000))
+sum(x) # No, 10 decimal places
+%% end.rcode
+
+\subsubsection*{(c)}
+When using a \textit{for} loop to do the summation with 1 as the first value, we do not get the right answer,
+but only 11 decimal places. However, with 1 as the last value during the summation, we can get the 16-decimal-place
+right answer.
+
+%% begin.rcode PS41-c, cache=TRUE, results="markup"
+%%# (c)
+sum = 0
+for (i in 1:length(x))  sum = sum + x[i]
+sum # No, 11 decimal places
+
+sum = 0
+for (i in 2:length(x))  sum = sum + x[i]
+sum + x[1] # YES, 16 decimal places
+%% end.rcode
+
+\subsubsection*{(d)}
+Now, when considering 10000 copies of $1 \times 10^{-16}$, the results of repeating (b) and (c) are shown below.
+Function \textit{sum()} gives only 11 decimal places, and \textit{for} loop with leading 1 gives underflown results.
+However, \textit{for} loop with 1 as the last value still gives the 16-decimal-place right answer.
+
+%% begin.rcode PS41-d, cache=TRUE, results="markup"
+%%# (d) 1e-16 repeat b and c 
+x <- c(1, rep(1e-16, 10000))
+sum(x) # (b) No, 11 decimal places
+
+sum = 0
+for (i in 1:length(x))  sum = sum + x[i]
+sum # (c) No, 0 decimal places, 1e-16 underflow double.eps
+
+sum = 0
+for (i in 2:length(x))  sum = sum + x[i]
+sum + x[1] # (c) YES, 16 decimal places
+%% end.rcode
+
+\subsubsection*{(e)}
+From the results in parts (b), (c) and (d), we can see that R's \textit{sum()} function does not sum
+from left to right just using regular 16-decimal-place numbers. There is more undergoing with the function.
+See detailed exploration in part (g) below.
+
+\subsubsection*{(f)}
+In order to only have 4 decimal places of accuracy in adding numbers of order of magnitude $10^{-16}$,
+we need $10^{12}$ copies, which will take the storage space of $10^12\cdot 8byte/10^9=$\rinline{1e12*8/1e9}Gb.
+
+\subsubsection*{(g)}
+The \textit{sum()} function in R calls a C function \textit{rsum()} to do the summation.
+%% begin.rcode PS41-g, results="markup", echo = FALSE
+base::sum
+%% end.rcode
+\begin{lstlisting}
+long double s = 0.0;
+for (i = 0; i < n; i=i+1){
+	s = s + x[i]
+}
+\end{lstlisting}
+
+In the C code, we can see that the "trick" is with the type definition of \textit{s} variable.
+Using \textit{long double} in C, the machine implements \textit{s} with extended precision data type,
+i.e. 80-bit number with sign(1b) + exp(15b) + int(1b) + frac(63b). This allows \textit{sum()} to give
+almost accurate results when just summing left to right and convert down to regular double precision.
+
+
+
+
+
+\newpage
+\section*{Problem 2}
+
+We will ignore pivoting for the purpose of this problem when working out the number of calculations 
+involved in the LU and Cholesky decomposition. 
+
+\subsubsection*{(a)}
+For an $n\times n$ invertible matrix, the number of flops involved in the forward reduction step of
+the LU decomposition, which finds $L$ and $U$ excluding the calculations that change $b$ to $b^*$) is
+\begin{lstlisting}
+/* 
+ LU Decomposition
+ L_{n-1}...L_2*L_1*A = U  forward reduction deducted in class
+ L = L_{n-1}^{-1}...L_2^{-1}*L_1^{-1}  no additional calculations
+ b^* = L_{n-1}...L_2*L_1*b
+
+ FLOPS		:	$rows*( col_i + 2*col_{i+1}^n )   zero-out ops are not calculated here
+ L_1			: (n-1)*(0 + 2*(n-1))
+ L_2			: (n-2)*(0 + 2*(n-2))
+ ...
+ L_{n-1}	: 1*(0 + 1)
+*/
+\end{lstlisting}
+$LU(A_{nn}) = \sum_{i=1}^{n-1} (n-i)*(0+2*(n-i)) = 2n^3/3 - n^2 + n/3$
+
+\hbox{}
+Comparing this to the number of caculations involved in the Cholesky decomposition, we have
+\begin{lstlisting}
+/* 
+ Chol Decomposition
+ Positive definite (p.d.) A = U'*U
+ b^* = U'^(-1)*b
+
+ FLOPS		: a_{ii} SQRT + col{i+1}^ n DIV + (i-1)*col{i, i+1}^n MUL
+ row 1		: 1 + (n-1) + 0
+ row 2		: 1 + (n-2) + 1*(1 + n-2)
+ row 3		: 1 + (n-3) + 2*(1 + n-3)
+ ...
+ row n-1	: 1 + 1 + (n-2)*(1 + 1)
+ row n		: 1 + 0 + (n-1)*(1 + 0)
+*/
+\end{lstlisting}
+$Chol(A_{nn}) = \sum_{i=1}^n 1 + (n-i) + (i-1)*(1 + n-i) = n^3/6 + n^2/2 + n/3$ 
+
+\hbox{}
+Now, we consider the additional computation involved in finding $b^*$
+\newline
+\hbox{}
+\newline
+$LU(b^*)  = \sum_{i=1}^n 2*(i-1) = n^2 - n$
+\newline
+$Chol(b^*)  = \sum_{i=1}^n i  = n^2/2 + n/2$
+
+
+\subsubsection*{(b)}
+The additional flops involved in the backward elimination step that finds $x$ based on
+$Ux=b^*$ is \newline
+$LU(x) = Chol(x) = \sum_{i=1}^n i  = n^2/2 + n/2$
+
+\subsubsection*{(c)}
+The flops involved in part (a) and (b) when $b$ is acutally a matrix $B$ with $p$ columns are
+simply $p$ times the regular vector-based flops, i.e.
+\newline
+$LU(B^*)  = p*LU(b^*) = pn^2 - pn$
+\newline
+$Chol(B^*) = p*Chol(b^*)  = pn^2/2 + pn/2$
+\newline
+\hbox{}
+\newline
+$LU(X) = p*LU(x) = pn^2/2 + pn/2$
+\newline
+$Chol(X) = p*Chol(x) = pn^2/2 + pn/2$
+
+\subsubsection*{(d)}
+Another way of doing this is to explicitly find the inverse, $A^{-1}$, and then multiply
+$A^{-1}$ by the matrix $B$. The number of steps involved in using LU to find 
+$V=A^{-1}  s.t.  LUV = I$ is
+\begin{lstlisting}
+/* 
+ Matrix inversion and multiplication
+ LUV = I
+ (1) find L,U: see (a) LU(A_{nn})
+ (2) V = U^{-1}*(L^{-1}*I) = U^(-1)*(-L with diag(1))
+*/
+\end{lstlisting}
+$INV(A_{nn}) = LU(A_{nn}) + LU(X)_{p=n} = 7n^3/6 - n^2 + n/3$
+\newline
+$INV(B^*)  = 0 $ \hspace{12 pt} as B is unchanged, no B* flops involved
+
+\subsubsection*{(e)}
+When we have $A^{-1}=V$ from part (d), the flops involved in $VB$ is \newline
+$INV(X) = pn^2$
+
+\subsubsection*{(f)}
+Finally we can compare the total flops involved in finding $A^{-1}B$ based on (c), (d) and (e).
+%% begin.rcode PS42-f, cache=TRUE, results="hide"
+%%## (f) Total FLOPS: X = A^{-1}*B = FUN(A_{nn}) + FUN(B^*)
+
+%%## (1) use LU: 				
+LU <- function(A, B){ ## LU_O   = 2n^3/3 + (3p/2-1)n^2 + (1/3-p/2)n ~ O[(2n/3+3p/2)*n^2]
+	solve(A, B)
+}
+%%## (2) use Inverse		
+INV <- function(A, B){ ## INV_O  = 7n^3/6 + (p-1)n^2 + n/3 ~ O[(7n/6+p)*n^2]
+	V <- solve(A)
+	V %*% B
+}
+%%## (3) use Cholesky		
+Chol <- function(A, B){ ## Chol_O = n^3/6 + (p+1/2)n^2 + (1/3+p)n ~ O[(n/6+p)*n^2]
+	U <- chol(A)
+	backsolve(U, backsolve(U, B, transpose = TRUE))
+}
+%% end.rcode
+The comparison of which is better DOES depend on how big $p$ is. Roughly, when $p>>n$, $INV$ will
+take fewer flops than $LU$, while $Chol$ is always better than the other two methods.
+
+\subsubsection*{(g)}
+Now, we are going to empirically test the flops results in R for calculating $A^{-1}B$ using
+an arbitrary matrix $A=Z^TZ$ with $n\in (100,3000), p\in (1,100,3000)$.
+
+%% begin.rcode PS42-g, cache=TRUE, results="markup", messages=FALSE
+%%## (g) empirical comparison: calculate X = A^{-1}*B
+options(digits = 4)
+require(rbenchmark)
+n <- c(100, 3000) # really slow when n=3000, be careful  #debug
+p <- c(1, 100, 3000)
+for (i in 1:1){ 
+	for (j in 1:3){
+		nn <- n[i]
+		pp <- p[j]
+		LU_O   <- 2*nn^3/3 + (3*pp/2-1)*nn^2 + (1/3-pp/2)*nn
+		INV_O  <- 7*nn^3/6 + (pp-1)*nn^2 + nn/3
+		Chol_O <- nn^3/6 + (pp+1/2)*nn^2 + (1/3+pp)*nn
+		cat("n =",nn,"and p =",pp,":\n")
+		cat("LU O[f(n)]:  ", format(LU_O,  width = 16,justify = 'right'),"\n");
+		cat("INV O[f(n)]: ", format(INV_O, width = 16,justify = 'right'),"\n");
+		cat("Chol O[f(n)]:", format(Chol_O,width = 16,justify = 'right'),"\n"); 
+
+		Z <- matrix(rnorm(nn^2), nn)
+		A <- crossprod(Z) 
+		B <- matrix(rnorm(nn*pp), nn) 
+		cat("all.equal :",all.equal(LU(A,B), INV(A,B), Chol(A,B)), "\n")
+		print(benchmark(LU(A,B), INV(A,B), Chol(A,B), replications = (2/i)^5)[1:6])
+		cat("\n")
+	}
+}
+%% end.rcode
+
+\subsubsection*{(h)}
+Now suppose we are going to have to do calculations with lots of new matrices, $B_j, j=1,2,...$
+in the future. We have, as below,
+\newline
+$LU(X_{future}) = LU(B^*) + LU(x) = 3pn^2/2 -pn/2 ~ O[(3n/2-1/2)pn]$
+\newline
+$INV(X_{future}) = INV(X) = pn^2 ~O[n\cdot pn]$
+\newline
+As shown above, there are advantages to pre-compute $A^{-1}$ with large $p$.
+
+
+\newpage
+\section*{Problem 3}
+To compute the generalized least squares estimator, 
+$\beta\hat = (X^T\Sigma^{-1}X)^{-1}X^T\Sigma^{-1}Y$
+for $X n\times p \Sigma n\times n; and n~1000, p~100$, we will
+do this in an efficient way with the following pseudo-code
+
+\begin{lstlisting}
+W = t(chol(S)); // S = W * W'
+//          X' * S^-1 * X * beta = X' * S^-1 * Y
+//   X' * (W * W')^-1 * X * beta = X' * (W * W')^-1 * Y
+//  X' * W'^-1 * W^-1 * X * beta = X' * W'^-1 * W^-1 * Y
+//             X_s' * X_s * beta = X_s' * Y_s			
+X_s = W^(-1) * X;
+Y_s = W^(-1) * Y;
+// Reduced from GLS to OLS:
+X_s.qr = qr(X_s); // Q: orthogonal; R: upper triangular
+Q = qr.Q(X_s.qr);  
+R = qr.R(X_s.qr); 
+//             X_s' * X_s * beta = X_s' * Y_s			
+//        R' * Q' * Q * R * beta = R' * Q' * Y
+//                      R * beta = Q' * Y
+beta = R^(-1) * Q' * Y
+\end{lstlisting}
+In R, the function \textit{gls()} is developed to do this computation.
+
+%% begin.rcode PS43, cache=TRUE, results="markup", messages=FALSE
+%%#### Problem Set 4
+%%#### 3. GLS estimator
+rm(list = ls(all = TRUE)) # remove all objects
+n <- 2000
+p <- 200
+scale <- 2 #debug
+n <- n/scale; p <- p/scale
+
+Z <- matrix(abs(rnorm(n^2)), n)
+S <- crossprod(Z)/max(Z)
+X <- matrix(rnorm(n*p)*10, n)
+Y <- matrix(rnorm(n)*100, n)
+
+gls <- function(X,S,Y){
+	W <- t(chol(S)) #### S = W * W'
+	X_s <- solve(W, X) #### X* = W^(-1) * X
+	Y_s <- solve(W, Y)
+	X_s.qr <- qr(X_s)
+	Q = qr.Q(X_s.qr)
+	R = qr.R(X_s.qr)
+	beta <- backsolve(R, crossprod(Q,Y))	
+	return(beta)
+}
+
+beta_hat <- function(X,S,Y){
+	Xt <- t(X)
+	Sinv <- solve(S)
+	beta <- solve(Xt %*% Sinv %*% X) %*% Xt %*% Sinv %*% Y
+	return(beta)
+}
+
+benchmark(gls(X,S,Y), beta_hat(X,S,Y), replications = 5)[1:6]
+%% end.rcode
+
+\newpage
+\section*{Problem 4}
+
+
+
+
+
+\end{document}
