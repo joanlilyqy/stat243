@@ -1,0 +1,756 @@
+\documentclass{article}\usepackage{graphicx, color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\definecolor{fgcolor}{rgb}{0.2, 0.2, 0.2}
+\newcommand{\hlnumber}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlfunctioncall}[1]{\textcolor[rgb]{0.501960784313725,0,0.329411764705882}{\textbf{#1}}}%
+\newcommand{\hlstring}[1]{\textcolor[rgb]{0.6,0.6,1}{#1}}%
+\newcommand{\hlkeyword}[1]{\textcolor[rgb]{0,0,0}{\textbf{#1}}}%
+\newcommand{\hlargument}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hlcomment}[1]{\textcolor[rgb]{0.180392156862745,0.6,0.341176470588235}{#1}}%
+\newcommand{\hlroxygencomment}[1]{\textcolor[rgb]{0.43921568627451,0.47843137254902,0.701960784313725}{#1}}%
+\newcommand{\hlformalargs}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hleqformalargs}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hlassignement}[1]{\textcolor[rgb]{0,0,0}{\textbf{#1}}}%
+\newcommand{\hlpackage}[1]{\textcolor[rgb]{0.588235294117647,0.709803921568627,0.145098039215686}{#1}}%
+\newcommand{\hlslot}[1]{\textit{#1}}%
+\newcommand{\hlsymbol}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlprompt}[1]{\textcolor[rgb]{0.2,0.2,0.2}{#1}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{\today}
+\chead{Ying Qiao SID:21412301}
+\rhead{Stat243 Fa12: Problem Set 4}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+\lstset{
+	frame=tb,
+	language=c,
+	aboveskip=3mm,
+	belowskip=3mm,
+	basicstyle={\small\ttfamily},
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	prebreak=\textbackslash,
+	showstringspaces=false,
+	columns=fullflexible,
+	upquote=true
+	}
+
+%% for inline R code: if the inline code is not correctly parsed, you will see a message
+\newcommand{\rinline}[1]{SOMETHING WORNG WITH knitr}
+
+
+
+
+\begin{document}
+\section*{Problem 1}
+
+When adding the number 1 to 10000 copies of the number $1 \times 10^{-15}$, the answer mathematically is \newline
+$1 + 1 \times 10^{-11} = 1.00000000001$. However, in order to explore computer-represented arithmetics, 
+we want to use this as an example of the summation accuracy with numbers of very different magnitudes.
+
+\subsubsection*{(a)}
+Asumming we do not carry out the calculations in a dumb way, the best precision we can expect of our result
+will be the machine \textit{double.eps}=$2.2204\times 10^{-16}$, i.e. 16 decimal places.
+
+
+
+
+\subsubsection*{(b)}
+As shown in the results below, using \textit{sum()} does not give the right answer (16 decimal places), but only
+10 decimal places.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{# (b)}
+x <- \hlfunctioncall{c}(1, \hlfunctioncall{rep}(1e-15, 10000))
+\hlfunctioncall{sum}(x)  \hlcomment{# No, 10 decimal places}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.000000000009999556738
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\subsubsection*{(c)}
+When using a \textit{for} loop to do the summation with $1$ as the first value, we do not get the right answer,
+but only 11 decimal places. However, with $1$ as the last value during the summation, we can get the 16-decimal-place
+right answer.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{# (c)}
+x <- \hlfunctioncall{c}(1, \hlfunctioncall{rep}(1e-15, 10000))
+sum = 0
+\hlfunctioncall{for} (i in 1:\hlfunctioncall{length}(x)) sum = sum + x[i]
+sum  \hlcomment{# No, 11 decimal places}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.000000000011102230246
+\end{verbatim}
+\begin{alltt}
+
+sum = 0
+\hlfunctioncall{for} (i in 2:\hlfunctioncall{length}(x)) sum = sum + x[i]
+sum + x[1]  \hlcomment{# YES, 16 decimal places}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.000000000010000000827
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\subsubsection*{(d)}
+Now, when considering 10000 copies of $1 \times 10^{-16}$, the results of repeating (b) and (c) are shown below.
+Function \textit{sum()} gives about 11 decimal places, and the \textit{for} loop sum with leading $1$ gives underflown results.
+However, \textit{for} loop sum with $1$ as the last value still gives the 16-decimal-place right answer.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{# (d) 1e-16 repeat b and c}
+x <- \hlfunctioncall{c}(1, \hlfunctioncall{rep}(1e-16, 10000))
+\hlfunctioncall{sum}(x)  \hlcomment{# (b) No, 11 decimal places}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.000000000000999644811
+\end{verbatim}
+\begin{alltt}
+
+sum = 0
+\hlfunctioncall{for} (i in 1:\hlfunctioncall{length}(x)) sum = sum + x[i]
+sum  \hlcomment{# (c) No, 0 decimal places, 1e-16 underflow double.eps}
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\begin{alltt}
+
+sum = 0
+\hlfunctioncall{for} (i in 2:\hlfunctioncall{length}(x)) sum = sum + x[i]
+sum + x[1]  \hlcomment{# (c) YES, 16 decimal places}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.000000000001000088901
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\subsubsection*{(e)}
+From the results in parts (b), (c) and (d), we can see that R's \textit{sum()} function does not sum
+from left to right just using regular 16-decimal-place numbers. There is more work undergoing with the function.
+See detailed exploration in part (g) given below.
+
+\subsubsection*{(f)}
+In order to only have 4 decimal places of accuracy in adding numbers of order of magnitude $10^{-16}$,
+we need $10^{12}$ copies, which will take the storage space of $10^{12}\cdot 8[byte]/10^9 = $8000Gb.
+
+\subsubsection*{(g)}
+The \textit{sum()} function in R calls a C function \textit{sum()} to do the summation.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## function (..., na.rm = FALSE)  .Primitive("sum")
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{lstlisting}
+void sum (int* x){
+	long double s = 0.0;
+	for (i = 0; i < n; i=i+1){
+		s = s + x[i]
+	}
+	return s
+}
+\end{lstlisting}
+
+In the C code, we can see that the "trick" is with the type definition of \textit{s} variable.
+Using \textit{long double} in C, the machine implements \textit{s} with extended precision data type, i.e. \newline
+80-bit number with sign(1b) + exp(15b) + int(1b) + frac(63b). This allows \textit{sum()} to give
+almost accurate results when just summing left to right and convert down to regular double precision (64 bits).
+
+
+
+
+
+\newpage
+\section*{Problem 2}
+
+We will ignore pivoting for the purpose of this problem when working out the number of calculations 
+involved in the LU and Cholesky decomposition. 
+
+\subsubsection*{(a)}
+For an $n\times n$ invertible matrix, the number of flops involved in the forward reduction step of
+the LU decomposition, which finds $L$ and $U$ excluding the calculations that change $b$ to $b^*$ is
+\begin{lstlisting}
+ LU Decomposition
+ L{n-1}...L2*L1*A = U  //forward reduction deducted in class
+ L = L{n-1}^-1...L2^-1*L1^-1  //no additional calculations
+ b* = L{n-1}...L2*L1*b
+
+ FLOPS	:	rows *( col{i} + 2*col{i+1}^n )  //zero-out ops are not calculated here
+ L1			: (n-1)*(0 + 2*(n-1))
+ L2			: (n-2)*(0 + 2*(n-2))
+ ...
+ L{n-1}	: 1*(0 + 1)
+\end{lstlisting}
+$LU(A_{nn}) = \sum_{i=1}^{n-1} 2(n-i)^2 = 2n^3/3 - n^2 + n/3$
+
+\hbox{}
+Comparing this to the number of caculations involved in the Cholesky decomposition, we have
+\begin{lstlisting}
+ Chol Decomposition
+ A = UT*U //Positive definite (p.d.) matrix
+ b* = UT^-1*b
+
+ FLOPS		: a{ii} SQRT + col{i+1}^n DIV + (i-1)*col{i}^n MUL
+ row 1		: 1 + (n-1) + 0
+ row 2		: 1 + (n-2) + 1*(1 + n-2)
+ row 3		: 1 + (n-3) + 2*(1 + n-3)
+ ...
+ row n-1	: 1 + 1 + (n-2)*(1 + 1)
+ row n		: 1 + 0 + (n-1)*(1 + 0)
+\end{lstlisting}
+$Chol(A_{nn}) = \sum_{i=1}^n i(1 + n-i) = n^3/6 + n^2/2 + n/3$ 
+
+\hbox{}
+Now, we consider the additional computation flops involved in finding $b^*$
+\newline
+\hbox{}
+\newline
+$LU(b^*)  = \sum_{i=1}^n 2(i-1) = n^2 - n$
+\newline
+$Chol(b^*)  = \sum_{i=1}^n i  = n^2/2 + n/2$
+
+
+\subsubsection*{(b)}
+The additional flops involved in the backward elimination step that finds $x$ based on
+$Ux=b^*$ is \newline
+$LU(x) = Chol(x) = \sum_{i=1}^n i  = n^2/2 + n/2$
+
+\subsubsection*{(c)}
+The flops involved in part (a) and (b) when $b$ is acutally a matrix $B$ with $p$ columns are
+simply $p$ times the regular vector-based flops, i.e.
+\newline
+$LU(B^*)  = p*LU(b^*) = pn^2 - pn$
+\newline
+$Chol(B^*) = p*Chol(b^*)  = pn^2/2 + pn/2$
+\newline
+\hbox{}
+\newline
+$LU(X) = p*LU(x) = pn^2/2 + pn/2$
+\newline
+$Chol(X) = p*Chol(x) = pn^2/2 + pn/2$
+
+\subsubsection*{(d)}
+Another way of doing this is to explicitly find the inverse, $A^{-1}$, and then multiply
+$A^{-1}$ by the matrix $B$. The number of steps involved in using LU to find 
+$V=A^{-1}  s.t.  LUV = I$ is
+\begin{lstlisting}
+ Matrix inversion and multiplication
+ LUV = I // A = LU
+ (1) find L,U; see results from (a) with LU(A_nn)
+ (2) V = U^-1*(L^-1*I) = U^-1*(-L with diag(1))
+\end{lstlisting}
+$INV(A_{nn}) = LU(A_{nn}) + LU(X)_{p=n} = 7n^3/6 - n^2 + n/3$
+\newline
+$INV(B^*)  = 0 $ \hspace{18 pt} as $B$ is unchanged, no $B^*$ flops involved
+
+\subsubsection*{(e)}
+When we have $A^{-1}=V$ from part (d), the flops involved in calculating $VB$ is \newline
+$INV(X) = pn^2$
+
+\subsubsection*{(f)}
+Finally we can compare the total flops involved in finding $A^{-1}B$ based on (c), (d) and (e).
+\newline
+$LU_O   = 2n^3/3 + (3p/2-1)n^2 + (1/3-p/2)n \sim O[(2n/3+3p/2)n^2]$
+\newline
+$INV_O  = 7n^3/6 + (p-1)n^2 + n/3 \sim O[(7n/6+p)n^2]$
+\newline
+$Chol_O = n^3/6 + (p+1/2)n^2 + (1/3+p)n \sim O[(n/6+p)n^2]$
+\newline
+\hbox{}
+\newline
+The comparison of which is better DOES depend on how big $p$ is. Roughly, when $p>>n$, $INV$ will
+take fewer flops than $LU$, while $Chol$ is always better than the other two methods.
+
+\subsubsection*{(g)}
+Now, we are going to empirically test the flops results in R for calculating $A^{-1}B$ using
+an arbitrary matrix $A=Z^TZ$ with $n\in (100,3000), p\in (1,100,3000)$.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{## (g) empirical comparison: calculate X = A^\{-1\}*B}
+\hlfunctioncall{options}(digits = 4)
+\hlfunctioncall{require}(rbenchmark)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# Loading required package: rbenchmark}}\begin{alltt}
+\hlcomment{## (1) use LU:}
+LU <- \hlfunctioncall{function}(A, B) \{
+    \hlfunctioncall{solve}(A, B)
+\}
+\hlcomment{## (2) use Inverse}
+INV <- \hlfunctioncall{function}(A, B) \{
+    V <- \hlfunctioncall{solve}(A)
+    V %*% B
+\}
+\hlcomment{## (3) use Cholesky}
+Chol <- \hlfunctioncall{function}(A, B) \{
+    U <- \hlfunctioncall{chol}(A)
+    \hlfunctioncall{backsolve}(U, \hlfunctioncall{backsolve}(U, B, transpose = TRUE))
+\}
+
+n <- \hlfunctioncall{c}(100, 3000)  \hlcomment{# really slow when n=3000, be careful}
+p <- \hlfunctioncall{c}(1, 100, 3000)
+\hlfunctioncall{for} (i in 1:2) \{
+    \hlfunctioncall{for} (j in 1:3) \{
+        nn <- n[i]
+        pp <- p[j]
+        LU_O <- 2 * nn^3/3 + (3 * pp/2 - 1) * nn^2 + (1/3 - pp/2) * nn
+        INV_O <- 7 * nn^3/6 + (pp - 1) * nn^2 + nn/3
+        Chol_O <- nn^3/6 + (pp + 1/2) * nn^2 + (1/3 + pp) * nn
+        \hlfunctioncall{cat}(\hlstring{"n ="}, nn, \hlstring{"and p ="}, pp, \hlstring{":\textbackslash{}n"})
+        \hlfunctioncall{cat}(\hlstring{"LU O[\hlfunctioncall{f}(n)]:  "}, \hlfunctioncall{format}(LU_O, width = 16, justify = \hlstring{"right"}), \hlstring{"\textbackslash{}n"})
+        \hlfunctioncall{cat}(\hlstring{"INV O[\hlfunctioncall{f}(n)]: "}, \hlfunctioncall{format}(INV_O, width = 16, justify = \hlstring{"right"}), \hlstring{"\textbackslash{}n"})
+        \hlfunctioncall{cat}(\hlstring{"Chol O[\hlfunctioncall{f}(n)]:"}, \hlfunctioncall{format}(Chol_O, width = 16, justify = \hlstring{"right"}), 
+            \hlstring{"\textbackslash{}n"})
+        Z <- \hlfunctioncall{matrix}(\hlfunctioncall{rnorm}(nn^2), nn)
+        A <- \hlfunctioncall{crossprod}(Z)
+        B <- \hlfunctioncall{matrix}(\hlfunctioncall{rnorm}(nn * pp), nn)
+        \hlfunctioncall{cat}(\hlstring{"all.equal :"}, \hlfunctioncall{all.equal}(\hlfunctioncall{LU}(A, B), \hlfunctioncall{INV}(A, B), \hlfunctioncall{Chol}(A, B)), \hlstring{"\textbackslash{}n"})
+        \hlfunctioncall{print}(\hlfunctioncall{benchmark}(\hlfunctioncall{LU}(A, B), \hlfunctioncall{INV}(A, B), \hlfunctioncall{Chol}(A, B), replications = (2/i)^5)[1:6])
+        \hlfunctioncall{cat}(\hlstring{"\textbackslash{}n"})
+    \}
+\}
+\end{alltt}
+\begin{verbatim}
+## n = 100 and p = 1 :
+## LU O[f(n)]:             671650 
+## INV O[f(n)]:           1166700 
+## Chol O[f(n)]:           181800 
+## all.equal : TRUE 
+##         test replications elapsed relative user.self sys.self
+## 3 Chol(A, B)           32   0.024    1.000     0.028    0.020
+## 2  INV(A, B)           32   0.069    2.875     0.080    0.060
+## 1   LU(A, B)           32   0.025    1.042     0.020    0.032
+## 
+## n = 100 and p = 100 :
+## LU O[f(n)]:            2151700 
+## INV O[f(n)]:           2156700 
+## Chol O[f(n)]:          1181700 
+## all.equal : TRUE 
+##         test replications elapsed relative user.self sys.self
+## 3 Chol(A, B)           32   0.072    1.636     0.084    0.060
+## 2  INV(A, B)           32   0.083    1.886     0.092    0.072
+## 1   LU(A, B)           32   0.044    1.000     0.056    0.032
+## 
+## n = 100 and p = 3000 :
+## LU O[f(n)]:           45506700 
+## INV O[f(n)]:          31156700 
+## Chol O[f(n)]:         30471700 
+## all.equal : Mean relative difference: 1.073e-15 
+##         test replications elapsed relative user.self sys.self
+## 3 Chol(A, B)           32   1.747    3.617     2.052    1.424
+## 2  INV(A, B)           32   0.483    1.000     0.804    0.160
+## 1   LU(A, B)           32   0.809    1.675     1.164    0.436
+## 
+## n = 3000 and p = 1 :
+## LU O[f(n)]:            1.8e+10 
+## INV O[f(n)]:          3.15e+10 
+## Chol O[f(n)]:        4.514e+09 
+## all.equal : Mean relative difference: 6.882e-15 
+##         test replications elapsed relative user.self sys.self
+## 3 Chol(A, B)            1   1.623    1.000     2.352    0.432
+## 2  INV(A, B)            1   9.585    5.906    16.637    0.868
+## 1   LU(A, B)            1   2.579    1.589     4.369    0.352
+## 
+## n = 3000 and p = 100 :
+## LU O[f(n)]:          1.934e+10 
+## INV O[f(n)]:         3.239e+10 
+## Chol O[f(n)]:        5.405e+09 
+## all.equal : Mean relative difference: 2.265e-15 
+##         test replications elapsed relative user.self sys.self
+## 3 Chol(A, B)            1   1.910    1.000     2.892    0.472
+## 2  INV(A, B)            1   9.696    5.076    16.969    0.832
+## 1   LU(A, B)            1   2.848    1.491     4.833    0.368
+## 
+## n = 3000 and p = 3000 :
+## LU O[f(n)]:          5.849e+10 
+## INV O[f(n)]:         5.849e+10 
+## Chol O[f(n)]:        3.151e+10 
+## all.equal : Mean relative difference: 2.301e-15 
+##         test replications elapsed relative user.self sys.self
+## 3 Chol(A, B)            1   8.198    1.000     14.42    0.752
+## 2  INV(A, B)            1  15.171    1.851     27.68    1.020
+## 1   LU(A, B)            1   8.657    1.056     15.91    0.636
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\subsubsection*{(h)}
+Now suppose we are going to have to do calculations with lots of new matrices, $B_j, j=1,2,...$
+in the future. We have flops comparison, as below,
+\newline
+$LU(X_{future}) = LU(B^*) + LU(x) = 3pn^2/2 -pn/2 \sim O[(3n/2-1/2)pn]$
+\newline
+$INV(X_{future}) = INV(X) = pn^2 \sim O[n\cdot pn]$
+\newline
+As shown above, there are advantages to pre-compute $A^{-1}$ with large $p$.
+
+
+\newpage
+\section*{Problem 3}
+To compute the generalized least squares estimator, 
+$\hat\beta = (X^T\Sigma^{-1}X)^{-1}X^T\Sigma^{-1}Y$
+for $X n\times p, \Sigma n\times n; n\sim 1000, p\sim 100$, we will
+do this in an efficient way with the following pseudo-code:
+
+\begin{lstlisting}
+// S = W * W'
+W = transpose(cholesky(S)); 
+//          X' * S^-1 * X * beta = X' * S^-1 * Y
+//   X' * (W * W')^-1 * X * beta = X' * (W * W')^-1 * Y
+//  X' * W'^-1 * W^-1 * X * beta = X' * W'^-1 * W^-1 * Y
+//             X_s' * X_s * beta = X_s' * Y_s			
+X_s = W^(-1) * X;
+Y_s = W^(-1) * Y;
+// Reduced from GLS to OLS:
+X_s.qr = qr(X_s); 
+// Q: orthogonal; R: upper triangular
+Q = qr.Q(X_s.qr);  
+R = qr.R(X_s.qr); 
+//             X_s' * X_s * beta = X_s' * Y_s			
+//        R' * Q' * Q * R * beta = R' * Q' * Y
+//                      R * beta = Q' * Y
+beta = R^(-1) * transpose(Q) * Y
+\end{lstlisting}
+
+In R, my function \textit{gls()} is developed to do this computation.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### 3. GLS estimator}
+n <- 2000
+p <- 200
+
+Z <- \hlfunctioncall{matrix}(\hlfunctioncall{abs}(\hlfunctioncall{rnorm}(n^2)), n)
+S <- \hlfunctioncall{crossprod}(Z)/\hlfunctioncall{max}(Z)
+X <- \hlfunctioncall{matrix}(\hlfunctioncall{rnorm}(n * p) * 10, n)
+Y <- \hlfunctioncall{matrix}(\hlfunctioncall{rnorm}(n) * 100, n)
+
+gls <- \hlfunctioncall{function}(X, S, Y) \{
+    W <- \hlfunctioncall{t}(\hlfunctioncall{chol}(S))  \hlcomment{## S = W * W'}
+    X_s <- \hlfunctioncall{solve}(W, X)  \hlcomment{## X* = W^(-1) * X}
+    Y_s <- \hlfunctioncall{solve}(W, Y)
+    X_s.qr <- \hlfunctioncall{qr}(X_s)
+    Q = \hlfunctioncall{qr.Q}(X_s.qr)
+    R = \hlfunctioncall{qr.R}(X_s.qr)
+    beta <- \hlfunctioncall{backsolve}(R, \hlfunctioncall{crossprod}(Q, Y))
+    \hlfunctioncall{return}(beta)  \hlcomment{## efficient way}
+\}
+
+beta_hat <- \hlfunctioncall{function}(X, S, Y) \{
+    Xt <- \hlfunctioncall{t}(X)
+    Sinv <- \hlfunctioncall{solve}(S)
+    beta <- \hlfunctioncall{solve}(Xt %*% Sinv %*% X) %*% Xt %*% Sinv %*% Y
+    \hlfunctioncall{return}(beta)  \hlcomment{## naive way}
+\}
+
+\hlfunctioncall{benchmark}(\hlfunctioncall{gls}(X, S, Y), \hlfunctioncall{beta_hat}(X, S, Y), replications = 5)[1:6]
+\end{alltt}
+\newpage
+\begin{verbatim}
+##                test replications elapsed relative user.self sys.self
+## 2 beta_hat(X, S, Y)            5   17.32    1.179     30.34    2.032
+## 1      gls(X, S, Y)            5   14.69    1.000     22.39    4.413
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+We can see that there is 2X speed gain with function \textit{gls()}.
+
+\newpage
+\section*{Problem 4}
+Here, we want to explore whether integer calculations in R are faster than
+floating point calculations.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### 4. compare integer and floating point calculations}
+\hlfunctioncall{require}(rbenchmark)
+\hlfunctioncall{options}(digits = 4)
+\hlcomment{### comparison: Integer vs. Double}
+xi <- \hlfunctioncall{as.integer}(\hlfunctioncall{rnorm}(1e+06))  \hlcomment{# 1e6 samples}
+xf <- \hlfunctioncall{rnorm}(1e+06)
+\hlfunctioncall{benchmark}(xi[100:10000], xf[100:10000], replications = 100)[1:6]  \hlcomment{#subsetting}
+\end{alltt}
+\begin{verbatim}
+##            test replications elapsed relative user.self sys.self
+## 2 xf[100:10000]          100   0.016        1     0.016    0.000
+## 1 xi[100:10000]          100   0.016        1     0.012    0.004
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{benchmark}(\hlfunctioncall{sum}(xi), \hlfunctioncall{sum}(xf), replications = 100)[1:6]  \hlcomment{#arithmetic: sum}
+\end{alltt}
+\begin{verbatim}
+##      test replications elapsed relative user.self sys.self
+## 2 sum(xf)          100   0.352     1.37     0.352        0
+## 1 sum(xi)          100   0.257     1.00     0.256        0
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{benchmark}(\hlfunctioncall{crossprod}(xi), \hlfunctioncall{crossprod}(xf), replications = 100)[1:6]  \hlcomment{#arithmetic: mul}
+\end{alltt}
+\begin{verbatim}
+##            test replications elapsed relative user.self sys.self
+## 2 crossprod(xf)          100   0.727    1.000     0.728     0.00
+## 1 crossprod(xi)          100   1.789    2.461     1.244     0.54
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+As shown above in the results, this claim is not necessary true. It seems that 
+integer arithmetics are slower while subsetting vectors is almost the same as compared to
+floating points.
+
+\newpage
+\section*{Problem 5}
+We want to empirically explore the condition number of the eigen-decomposition.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### 5. Condition number of eigen decomposition}
+norm2 <- \hlfunctioncall{function}(x) \hlfunctioncall{sqrt}(\hlfunctioncall{sum}(x^2)) \hlcomment{# aux function calc norm2 of vecs}
+\hlcomment{### Create a set of eigenvectors}
+n <- 100
+Z <- \hlfunctioncall{matrix}(\hlfunctioncall{rnorm}(n^2), n)
+A <- \hlfunctioncall{crossprod}(Z)
+GAMMA <- \hlfunctioncall{eigen}(A)$vec \hlcomment{#eigen vectors created from a random p.d. matrix}
+\hlcomment{### Explore positive eigenvalues of different magnitudes}
+t <- .Machine$double.digits \hlcomment{#computer presicion bits}
+errors <- \hlfunctioncall{rep}(\hlfunctioncall{as.numeric}(NA), t) \hlcomment{#relative error}
+magval <- \hlfunctioncall{rep}(\hlfunctioncall{as.numeric}(NA), t) \hlcomment{#eigen value magnitude}
+condno <- \hlfunctioncall{rep}(\hlfunctioncall{as.numeric}(NA), t) \hlcomment{#condition number}
+\hlfunctioncall{for} (i in 1:t)\{
+    \hlcomment{## get a random set of indices to enlarge with condition number}
+    ids <- \hlfunctioncall{sample}(1:n, n/4) 
+    \hlfunctioncall{if} (i == 1)\{ \hlcomment{# i=1, with all eigen values equal}
+        lambda <- \hlfunctioncall{rep}(\hlfunctioncall{mean}(\hlfunctioncall{abs}(\hlfunctioncall{rnorm}(n))), n) 
+    \}
+    else\{
+        lambda <- \hlfunctioncall{abs}(\hlfunctioncall{rnorm}(n))
+    \}
+    \hlcomment{## generate eigen values with certain condition number}
+    lambda[ids] <- lambda[ids]*(2^(i-1)) 
+    magval[i] <- \hlfunctioncall{max}(lambda)
+    condno[i] <- magval[i]/\hlfunctioncall{min}(lambda)
+	
+    LAMBDA <- \hlfunctioncall{diag}(lambda)
+    testA <- GAMMA %*% LAMBDA %*% \hlfunctioncall{t}(GAMMA) \hlcomment{# create p.d. matrix}
+    errors[i] <- \hlfunctioncall{norm2}(\hlfunctioncall{eigen}(testA)$val - lambda)/\hlfunctioncall{norm2}(lambda)
+    \hlfunctioncall{if} (\hlfunctioncall{length}(\hlfunctioncall{which}(\hlfunctioncall{eigen}(testA)$val < 0)) > 0)\{ \hlcomment{# not p.d.}
+        \hlfunctioncall{cat}(\hlstring{"Failed at condition number"}, condno[i], 
+            \hlstring{"with relative error of"}, errors[i], \hlstring{"\textbackslash{}n"})
+        \hlfunctioncall{par}(mfrow=\hlfunctioncall{c}(2,1),cex= 1, cex.main= 1)
+        \hlfunctioncall{plot}(\hlfunctioncall{log10}(condno), errors, xlim=\hlfunctioncall{c}(0, 17), ylim=\hlfunctioncall{c}(0, 1.6),
+             main=\hlstring{"Relative error in estimated eigenvalues vs. condition number"})
+        \hlfunctioncall{plot}(\hlfunctioncall{log10}(magval), errors, xlim=\hlfunctioncall{c}(0, 17), ylim=\hlfunctioncall{c}(0, 1.6),
+             main=\hlstring{"Relative error in estimated eigenvalues vs. magnitude of eigenvalues"})
+        break
+    \}
+\}
+\end{alltt}
+\begin{verbatim}
+## Failed at condition number 5.454e+16 with relative error of 1.282
+\end{verbatim}
+\end{kframe}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS45} 
+
+}
+
+
+\end{knitrout}
+
+
+As shown in the results above, the test matrix fails to be numerically positive definite with
+condition number around $10^{17}$ and estimated eigenvalue relative error around $1.2$.
+The plots show that the error saturates pretty quickly at the smaller condition numbers, 
+but only when the condition number overflows, the matrix will no longer be positive definite.
+
+\newpage
+\section*{Problem 6}
+In order to  see the representation of decimal numbers in base-2 computer bits, both R and C codes are
+written to see the rounding or "garbage digits" phenomenon.
+In the R code, we can see "rounding" with $x \sim 10^{-17}$, 
+when $x$ get multiplied by $2^{56}$ to be converted into integers.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+#### 6. \hlstring{"Garbage"} digits
+\hlfunctioncall{options}(digits = 22)
+x <- \hlfunctioncall{c}(0.12345678123456780000, 0.12345678123456781000,
+       0.12345678123456782000, 0.12345678123456783000,
+       0.12345678123456784000, 0.12345678123456785000,
+       0.12345678123456786000, 0.12345678123456787000,
+       0.12345678123456788000, 0.12345678123456789000)
+x
+\end{alltt}
+\begin{verbatim}
+##  [1] 0.1234567812345677972896 0.1234567812345678111674
+##  [3] 0.1234567812345678250452 0.1234567812345678250452
+##  [5] 0.1234567812345678389230 0.1234567812345678528008
+##  [7] 0.1234567812345678666786 0.1234567812345678666786
+##  [9] 0.1234567812345678805563 0.1234567812345678944341
+\end{verbatim}
+\begin{alltt}
+x*2^56 \hlcomment{# see \hlfunctioncall{longdouble.c} (consistent, last bit is garbage)}
+\end{alltt}
+\begin{verbatim}
+##  [1] 8895998623429766 8895998623429767 8895998623429768 8895998623429768
+##  [5] 8895998623429769 8895998623429770 8895998623429771 8895998623429771
+##  [9] 8895998623429772 8895998623429773
+\end{verbatim}
+\begin{alltt}
+
+y <- \hlfunctioncall{c}(0.0000000012345678123456780000, 0.0000000012345678123456781000,
+       0.0000000012345678123456782000, 0.0000000012345678123456783000,
+       0.0000000012345678123456784000, 0.0000000012345678123456785000,
+       0.0000000012345678123456786000, 0.0000000012345678123456787000,
+       0.0000000012345678123456788000, 0.0000000012345678123456789000)
+y
+\end{alltt}
+\begin{verbatim}
+##  [1] 1.234567812345678014160e-09 1.234567812345678014160e-09
+##  [3] 1.234567812345678220956e-09 1.234567812345678220956e-09
+##  [5] 1.234567812345678427751e-09 1.234567812345678427751e-09
+##  [7] 1.234567812345678634546e-09 1.234567812345678634546e-09
+##  [9] 1.234567812345678841341e-09 1.234567812345678841341e-09
+\end{verbatim}
+\begin{alltt}
+y*2^82 \hlcomment{# see \hlfunctioncall{longdouble.c} (minor inconsistency, last bit is also garbage)}
+\end{alltt}
+\begin{verbatim}
+##  [1] 5970003617639354 5970003617639354 5970003617639355 5970003617639355
+##  [5] 5970003617639356 5970003617639356 5970003617639357 5970003617639357
+##  [9] 5970003617639358 5970003617639358
+\end{verbatim}
+\begin{alltt}
+
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+We can see that there really is "rounding" with these numbers when represented using
+base-2 computer numbers. The C code uses \textit{long double} type to represent floating points in 80 bits, 
+which gives us the references when verifying the R code results.
+\newpage
+\begin{lstlisting}
+#include <stdio.h>
+#include <math.h>
+int main (void)
+{
+	long double a[] = {0.12345678123456780000,0.12345678123456781000,0.12345678123456782000,
+			   0.12345678123456783000,0.12345678123456784000,0.12345678123456785000,
+			   0.12345678123456786000,0.12345678123456787000,0.12345678123456788000,
+			   0.12345678123456789000};
+	long double b[] = {0.0000000012345678123456780000,0.0000000012345678123456781000,
+			   0.0000000012345678123456782000,0.0000000012345678123456783000,
+			   0.0000000012345678123456784000,0.0000000012345678123456785000,
+			   0.0000000012345678123456786000,0.0000000012345678123456787000,
+			   0.0000000012345678123456788000,0.0000000012345678123456789000};
+	long double ax2[10];
+	long double by2[10];
+	long double x2 = powl(2, 56);
+	long double y2 = powl(2, 82);
+	int i=0;
+	printf("x2 = %Lf\n", x2);
+	for (i=0; i<10; i++){
+	  ax2[i] = a[i]*x2;
+	  printf("long_d a = %.60Lf\n", a[i]);
+	  printf("integera = %Lf\n", ax2[i]);
+	}
+	printf("y2 = %Lf\n", y2);
+	for (i=0; i<10; i++){
+	  by2[i] = b[i]*y2;
+	  printf("long_d b = %.90Lf\n", b[i]);
+	  printf("integerb = %Lf\n", by2[i]);
+	}
+	return 0;
+}
+\end{lstlisting}
+\hbox{}
+\input{"./C4.6.tex"}
+
+We can see that C code results verifies our conclusion that the last bit is "garbage bit" here.
+
+\end{document}
