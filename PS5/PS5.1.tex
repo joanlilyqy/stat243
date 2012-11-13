@@ -29,37 +29,84 @@
 \begin{document}
 \section*{Problem 1}
 
-
-
 \subsubsection*{(a)}
-What are the goals of their simulation study and what are the metrics that they consider in
-assessing their method?
+
+\hspace{12 pt} As expressed explictly in the paper, the purpose of the simulation is to assess the accuracy
+of the proposed asymptotic approximation in finite samples and to examine the power of the EM test. 
+
+The key metrics that the authors consider in the simulation study includes model order, null/alternative 
+model selections, sample size choice and number of test repitions.
 
 \subsubsection*{(b)}
-What choices did the authors have to make in designing their simulation study? What are the
-key aspects of the data generating mechanism that likely affect the statistical power of the test?
+
+\hspace{12 pt} The first choice is the model order, in this study, order of 2 and 3 is chosen to demonstrate the test statistics.
+The next and probabaly the most important choices are the null/alternative model selections, i.e. the normal mixture parameter 
+specifications ($\alpha, \theta, \sigma$ and different combinations). 
+The final choices are the significance level (i.e. 1\% and 5\%), 
+sample sizes (i.e. 200 and 400)and number of test repititions (i.e. 1000 and 5000) for the simulation study.
+
+As for the data generating mechanism, the key aspects that will likely affect the statistical power of the test
+should be the RNG of mixture normal models. Though not much details are given in the paper, the RNG of mixture
+normal models are not that straightforward, and could have siginificant impact on the final results if naive
+RNG yields a lot of overlaps and reductions.
 
 \subsubsection*{(c)}
-Suggest some alternatives to how the authors designed their study. Are there data-generating
-scenarios that they did not consider that would be useful to consider?
+
+\hspace{12 pt} There are some data-generating scenarios that are missing in their simulation study.
+First, for order-2 models, the mixture model parameter specifications have missed out $(\theta_1,\theta_2)$ with
+both positive or negative numbers. The current 3 levels are all pairs of positive/negative numbers.
+Similar scenarios exist with order-3 models.
+
+Second, the alternative models are designed intentionally to mimic those null models, which though close to reality,
+are missing some non-ideal scenarios of models with large discrepency.
+
 
 \subsubsection*{(d)}
-Give some thoughts on how to set up a simulation study for their problem that uses principles of
-basic experimental design (see the Unit 10 notes) or if you think it would be difficult, say why.
+
+\hspace{12 pt} In order to test the hypothesis e.g. $H_0: m_0=2$ vs. $H_A: m_0 > 2$, the design space is quite large. 
+We could use the principles of basic experiemental design to set up the simulation study, but it would be 
+difficult to cover the whole space. As shown in the current setup, null models are just really a few 
+samples from the huge design space, only 2 $(\alpha_1, \alpha_2)$ levels, 3 $(\theta_1, \theta_2)$ levels and
+2 $(\sigma_1, \sigma_2)$ levels are considered to compose a full factorial design of $2\times 3\times 2=12$ levels.
+With the continuous and wide selections of $\alpha, \theta, \sigma$ numbers, level choices that cover wide design
+space will yield huge number of full-factorial design levels.
+
+However, it is possible to increase the random sample size levels from 2 (i.e. 200,400) to more. And this will give
+a much clearer trend of EM test power scaling with sample sizes.
+
 
 \subsubsection*{(e)}
-Do their figures/tables do a good job of presenting the simulation results and do you have any
-alternative suggestions for how to do this? Do the authors address the issue of simulation uncertainty/
-simulation standard errors and/or do they convince the reader they¡¯ve done enough
-simulation replications?
+
+\hspace{12 pt} The tables have done a fairly good job in representating EM test power under different models and sample sizes.
+However, there are inconsistencies between Table 4 and 6, as $\theta$ values split in Table 4 while $\alpha$ values
+split in Table 6. There is not much explanation in the text and cause some confusion on the reader's side.
+
+As for the figures, the representation could be better if the box plots are composed together with different labeling
+and grouping, so that the readers can have more comparisons among different combinations.
+
+At last, from the original text in the paper, there is no discussion on the issue of simulation uncertainty or standard
+errors. It is not so convincing to the readers that they have done enough simulation replications. The choice on the
+number of test repititions is rather arbitrary and lacks supporting evidence.
+
 
 \subsubsection*{(f)}
-Interpret their tables on power (Tables 4 and 6) - do the results make sense in terms of how the
-power varies as a function of the data generating mechanism?
+
+\hspace{12 pt} From the interpretation of the results shown in Tables 4 and 6, we can conclude that the EM test power is positively 
+correlated with the random sample size, as all the numbers in the $n=400$ column are larger than those in the $n=200$
+column. This shows that the data generating mechanism does have large impact on the final results and should be 
+analyzed more in the discussion and representation of the results.
+
 
 \subsubsection*{(g)}
-Discuss the extent to which they follow JASA¡¯s guidelines on simulation studies (see the end of
-the Unit 10 notes for the JASA guidelines).
 
+\hspace{12 pt} The JASA guidelines on simulation studies:
+"Results Based on Computation - Papers reporting results based on computation should provide
+enough information so that readers can evaluate the quality of the results. Such information
+includes estimated accuracy of results, as well as descriptions of pseudorandom-number generators,
+numerical algorithms, computers, programming languages, and major software components
+that were used."
+
+The authors fail to provide enough info suggested in the JASA guidelines on the simulation study in the paper. 
+We do not see descriptions of pseudorandom-number generators and computers performance specifications that were used.
 
 \end{document}
