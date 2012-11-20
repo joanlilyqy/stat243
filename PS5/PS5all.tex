@@ -1,0 +1,239 @@
+\documentclass{article}
+
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{\today}
+\chead{Ying Qiao SID:21412301}
+\rhead{Stat243 Fa12: Problem Set 5}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+
+%% for inline R code: if the inline code is not correctly parsed, you will see a message
+\newcommand{\rinline}[1]{SOMETHING WORNG WITH knitr}
+%% begin.rcode setup, include=FALSE
+% opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-', width=90)
+%% end.rcode
+
+
+\begin{document}
+\section*{Problem 2}
+
+\subsubsection*{(a)}
+
+\hspace{12 pt} Considering the adaptive rejection sampling (ARS) algorithm, we build a set of $p$ points,
+$x_1,...,x_p$ and an upper envelope function that is linear on the log scale withing each interval, i.e.
+$f(x) = exp(a_i+b_ix)$ for $x\in(x_{i-1},x_i)$
+
+We need to normalize this exponentiated upper envelop function in order to have a density of interest that
+we can draw samples from.\newline
+The normalization factor $N_f$ is constant,\newline
+$N_f = \displaystyle\sum_{i=1}^p \int_{x_{i-1}}^{x_i} exp(a_i+b_ix)dx 
+     = \displaystyle\sum_{i=1}^p \frac{e^{a_i}}{b_i}[e^{b_ix_i}-e^{b_ix_{i-1}}]$.\newline
+The probability associated with each interval $P_i$ is, \newline
+$P_i = Prob(x\in(x_{i-1},x_i)) = \frac{1}{N_f}\displaystyle\int_{x_{i-1}}^{x_i}exp(a_i+b_ix)dx
+     = \frac{e^{a_i}}{N_fb_i}[e^{b_ix_i}-e^{b_ix_{i-1}}]$.\newline
+
+
+\subsubsection*{(b)}
+
+\hspace{12 pt} We want to draw $x$ from the $i$th interval using the inverse CDF method.\newline
+The CDF function $F(x')$ is,\newline
+$F(x') = Prob(x\in(x_{i-1},x')) = \frac{1}{N_f}\displaystyle\int_{x_{i-1}}^{x'}exp(a_i+b_ix)dx
+        = \frac{e^{a_i}}{N_fb_i}[e^{b_ix'}-e^{b_ix_{i-1}}]$\newline
+We will draw $Z\sim Unif(0,1)$ and set $x = F^{-1}(z)$ for $i$th interval to get $X\sim F$,\newline
+$x = F^{-1}(z) = \frac{1}{b_i} \{\displaystyle log[N_fb_iz + exp(a_i+b_ix_{i-1})] -a_i\}$
+
+\subsubsection*{(c)}
+
+\hspace{12 pt} The psuedo-code style software that would implement ARS is listed below.
+%% begin.rcode PS52, eval=FALSE, echo=TRUE
+%%# Problem 5.2: ARS
+%%# [Reference] 
+%%# http://www.amsta.leeds.ac.uk/~wally.gilks/adaptive.rejection/web_page/Welcome.html
+
+%%# calculate the intercept and slope of the line set by succecutive points
+%%lineCoef <- function(x,y){# x in ascending order
+%%	return(data.frame(intercept=a,slope=b))
+%%}
+
+%%# calculate the intersection points above density curve
+%%# given the input points on the density curve
+%%intersec <- function(x,y){# x and y are the coordinates of the n points 
+%%	# get line info for n-1 intersection points
+%%	ab <- lineCoef(x=x,y=y)
+%%	# extrapolate intersection points outside the curve
+%%	qx[i] <- (a[i+1]-a[i-1])/(b[i-1]-b[i+1])
+%%	qy[i] <- a[i-1] + b[i-1]* qx[i]
+%%	return(cbind(qx,qy))
+%%}
+
+%%# get the set of points that construct the envelop
+%%envelop <- function(x,y){# x and y are input points on the curve
+%%	Q <- intersec(x,y)# all the upper points
+%%	T <- PQ[order(PQ)]# in order
+%%	return(data.frame(T))
+%%}
+
+%%# function that initializes input to sampling algorithm;
+%%# The inner and env element include the points and lines 
+%%# info for the inner chords and envelopes respectively.
+%%# The region element includes the line info for each region 
+%%# that is needed to be calculated
+%%init <- function(x,y){
+%%  # order x and y in the increasing order of x
+%%	inner <- list(pts=data.frame(x=x,y=y), line=lineCoef(x,y))
+%%	env <- list(pts=envelop(x,y),line=lineCoef(xy.env[1],xy.env[2]))
+%%  reg <- rbind(ab.inner,ab.env)
+%%	return(list(inner=inner,env=env,region=ab.reg))
+%%}
+
+%%# function to compute the areas of the envelop
+%%area <- function(pts,lb=NULL, rb=NULL){# init from initialization
+%%  # evaluation regions and points
+%%  reg <- pts$region
+%%  x<- pts$env$pts$x
+%%  # calculate the area under the envelope
+%%	ar[i] <- (exp(a+b*x[i+1])- exp(a+b*x[i]))/b
+%%  # normalize area and compute cumulatives
+%%  sum.ar <- sum(ar)       # raw total area
+%%  ar <- ar/sum.ar         # normalized - sum to 1
+%%  cum.ar <- cumsum(ar)    # cummulative
+%%  return(list(ar=ar,cum.ar=cum.ar,sum.ar=sum.ar)	)
+%%}
+
+%%# Draw sample from envelope
+%%sample.env <- function(pts,lb=NULL,rb=NULL){
+%%  # calculate the area under the envelope
+%%  ar <- area(pts,lb=lb,rb=rb)
+%%  reg <- pts$region
+%%  x<- pts$env$pts$x
+%%  # line coefficients for that region
+%%  a <- reg[rn,1]
+%%  b <- reg[rn,2] 
+%%  # sample a point from the envelope using inversion method
+%%	u <- runif(1)
+%%  # invert cumulative df to get sample point
+%%	sx <- (log(u*b*ar$sum.ar + exp(b*x[rn]+a)) - a) /b    
+%%	return(sx)
+%%}
+
+%%# test whether the sample should be accepted or not
+%%# and store the evaluation information of the target function
+%%test.sample <- function(sx,pts,func){
+%%  x<- pts$env$pts$x
+%%	u <- runif(1)	
+%%	if (u < exp(r[1]-r[2])) { # simple acceptance step
+%%		accept <- 1
+%%	} else { # evaluation and rejection step
+%%		if ( u < exp(func(sx)-r[2])) {
+%%			accept <- 1
+%%		}
+%%		if (!(sx %in% x)){ # updating step: update pts
+%%				x <- c(x, sx)
+%%				y <- c(y, sy)
+%%        pts <- init(x,y)
+%%		}
+%%	}
+%%	return(list(accept=accept,pts=pts,xeval=x))	
+%%}
+
+%%# main function to implement the ARS algorithm;
+%%# n: number of samples wanted;
+%%# func: the log density;
+%%# xinit: initial values for the X's, at least 3;
+%%# lb: left bound;
+%%# rb: right bound;
+%%# The output is a list of 4 elements;
+%%# sample: the sample values;
+%%# xeval: the new x's that cause the func to be evaluated;
+%%# pts: the points and line info for the chords and envelop;
+%%ars <- function(n,func,xinit,lb=NULL,rb=NULL){
+%%	# initialize
+%%	s <- c()
+%%	yinit <- func(xinit)
+%%	pts <- init(xinit,yinit)
+%%	# sample
+%%  while (length(s)<n){
+%%		sx <- sample.env(pts,lb=lb,rb=rb)
+%%		tsx <- test.sample(sx,pts,func)
+%%		if (tsx$accept) s <- c(s,sx)
+%%		pts <- tsx$pts
+%%    xeval <- tsx$xeval
+%%	}
+%%	return(list(sample=s,xeval=xeval,pts=pts))
+%%}
+
+%% end.rcode
+
+
+\newpage
+\section*{Problem 3}
+We will explore the need in importance sampling that the sampling density have heavier tails than
+the density of interest. We will estimate $EX$ and $E(X^2)$ with respect to density $f$ in this problem.
+
+\subsubsection*{(a)}
+\hspace{12 pt} Suppose $f\sim N(0,1)$ with sampling density $g\sim t(df=3)$. We sample $m=10000$ points
+to extract histograms of estimates and weights in order to get an idea whether $Var(\hat\mu)$ is large.
+
+As you can see from the results shown below, the variance is not so large since there are not many extreme
+weights in the samples.
+
+%% begin.rcode PS53a, cache=TRUE, results="markup", dev='cairo_pdf', fig.height=50, fig.align="center"
+## (a) we want to estimate EX and VX for a standrad normal drawn from a t with 3 degrees of freedom
+m <- 10000 # number of samples for each estimator
+set.seed(0)
+x <- rt(m, df = 3)  # i.e sample from g being a t with df=3
+f <- dnorm(x)  # density of x under f
+g <- dt(x, df = 3)  # density of x under g
+w <- f/g  # weights
+mean(x*w) #EX
+mean((x*w)^2) #VX
+
+par(mfrow=c(1,2),cex= 10, cex.main= 1.2)
+hist(w)
+hist(x*w)
+
+%% end.rcode
+
+\subsubsection*{(b)}
+\hspace{12 pt} Suppose $f\sim t(df=3)$ with sampling density $g\sim N(0,1)$. We sample $m=10000$ points
+to extract histograms of estimates and weights in order to get an idea whether $Var(\hat\mu)$ is large.
+
+As the sampling density $t(df=3)$ has less heavier tails than the density of interest $N(0,1)$, there are
+many extreme weights that have a very strong influence on the estimation variance, as shown below.
+
+
+%% begin.rcode PS53b, cache=TRUE, results="markup", dev='cairo_pdf', fig.height=50, fig.align="center"
+## (b) we want to estimate EX and EX^2 for a t with v=3 drawn from a standard normal
+m <- 10000 # number of samples for each estimator
+set.seed(0)
+x <- rnorm(m)  # i.e sample from g being a standard normal
+f <- dt(x, df = 3)  # density of x under f
+g <- dnorm(x)  # density of x under g
+w <- f/g  # weights
+mean(x*w) #EX
+mean((x*w)^2) #VX
+
+par(mfrow=c(1,2),cex= 10, cex.main= 1.2)
+hist(log(w))
+hist(log(x*w))
+
+%% end.rcode
+
+
+
+
+
+
+\end{document}

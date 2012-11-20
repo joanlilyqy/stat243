@@ -1,8 +1,10 @@
 s243.RData
 .Rhistory
 *.bak
+*.aux
+*.log
+*.gz
 html/*
 cache/*
 figure/*
-lec/*
 ref/*
