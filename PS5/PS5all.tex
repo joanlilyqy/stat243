@@ -232,8 +232,101 @@ hist(log(x*w))
 %% end.rcode
 
 
+\newpage
+\section*{Problem 4}
 
 
 
+
+
+
+
+
+
+
+\newpage
+\section*{Problem 5}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\section*{Problem 6}
+\hspace{12 pt} In the work that won the Netflix Prize done by C. Volinsky etc. at AT\&T labs, a variation
+on the singular value decomposition (SVD) of the matrix factorization methodology is employed.
+
+Given a matrix $R$ that represents $m$ users (individual Netflix members) and $n$ items (movies)
+with entries of movie ratings $r_{ui}$, $R=\{r_{ui}\}_{1\leq u\leq m, 1\leq i\leq n}$,
+the SVD factorization-based methodology computes the besk rank-$f$ approximation
+$R^f=P_{m\times f}Q_{n\times f}^T$, where $f\leq m,n$.
+
+Due to the fact that most entries of $R$ in this movie recommendation problem are unknown,
+the SVD here is used to extend the given data by filling in the unknow ratings by estimation 
+$r_{ui} \sim R_{ui}^f = p_u^T \cdot q_i$, where $p_u$ is the $u$-th row of $P$ corresponding to user $u$
+and $q_i$ is the $i$-th row of $Q$ corresponding to item $i$.
+
+An EM-based algorithm is employed to iteratively compute the $R$ matrix SVD by doing
+least square minimization of $\|R-PQ^T\|_F$ when alternating the fixed point between
+matrix $P$ and $Q$, i.e. \newline
+$Q^T \leftarrow (P^TP)^{-1}P^TR$ \newline
+$P \leftarrow RQ(Q^TQ)^{-1}$\newline
+Shrinkage is integrated to alleviate the overfitting problem and further reduce the estimation error,\newline
+$Err(P,Q)\equiv \displaystyle\sum_{(u,i)}(r_{ui}-p_u^Tq_i)^2$.
+
+To be more specific, assuming that we have already computed the first $f-1$ columns of
+matrices $P,Q$. The pseudo code for computing the $f$-th column of matrices $P,Q$ is given below
+\cite{KDD07}:
+
+%% begin.rcode PS56, eval=FALSE, echo=TRUE
+%%# Problem 5.6: EM based SVD variant
+f <- f+1 # iteration
+computeNext <- function(r,P,Q){ #known ratings, user factors, item factors
+	# compute the f-th column of P,Q to fit given ratings
+	# columns 1,...,f-1 were already computed
+	a <- alpha
+	e <- eps
+	# compute residuals portion not explained by previous factors
+	for (u in 1:m){
+		for (i in 1:n){
+			r[u,i] <- r[u,i] - crossprod(P[u,1:(f-1)],Q[i,1:(f-1)])
+			n <- s[u,i] # support behind r
+			r[u,i] <- n*r[u,i]/(n+a*f) #shrinkage
+		}
+	}
+	# compute the f-th factor for each user and item by solving
+	# many least square problems, each with a single unknown
+	while (err(P,Q) < 1-e){
+		for (u in 1:m){
+			P[u,f] <- crossprod(r[u, ],Q[ ,f])/crossprod(Q[ ,f])
+		}
+		for (i in 1:n){
+			Q[i,f] <- crossprod(r[ ,i],P[ ,f])/crossprod(P[ ,f])
+		}
+	}
+	return(list(P=P,Q=Q))
+}
+%% end.rcode
+
+At the end of the process, we obtain an approximation of all ratings in the form of a matrix product
+$PQ^T$, with predictions for unrated movies. The eigenvectors from SVD are user and item factors, while
+the eigenvalues are confidence indicators for the predictions.
+
+\begin{thebibliography}{9}
+\bibitem[1]{KDD07} R. Bell, Y. Koren, C. Volinsky, 
+"Modeling relationships at multiple scales to improve accuracy of large recommender systems",
+\textit{Proceedings of the 13th ACM SIGKDD International Conference on Knowledge Discovery and Data mining},
+pp. 95-104, Aug. 2007, San Jose, CA.
+\end{thebibliography}
 
 \end{document}

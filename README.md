@@ -17,3 +17,4 @@ Directory contexts:
 	PS3
 	PS4
 		./*.c     -- aux C code
+	PS5
