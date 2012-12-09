@@ -235,8 +235,33 @@ hist(log(x*w))
 \newpage
 \section*{Problem 4}
 
+\hspace{12 pt} This is a truncated/censored regression problem. In a given i.i.d. sample, stochastically, $c$ of the $n$ original observations
+will be censored (point $y_i$ will be denoted as NA in the simulated test sample if and only if $y_i > \tau$), with the known 
+indices set $IND=\{i^{obs},i^{mis}\}$ where $j=i^{obs}_1,...,i^{obs}_{n-c}$ and $k=i^{mis}_1,...,i^{mis}_c$. 
+Here, we assume a simple linear regression model, 
+$Y\sim X\beta + \epsilon$ with $Y_i\sim N(\beta_0+\beta_1x_i,\sigma^2)$, i.e. define $\beta=(\beta_0,\beta_1), \mu_i=(1, x_i)^T\beta$
 
-
+\subsubsection*{(a)}
+\hspace{12 pt} EM algorithm is designed to estimate the parameter set, $\theta = (\beta_0,\beta_1,\sigma^2)$. Here, we take the complete data to be
+the available data plus the actual values of the truncated observations, i.e. $Y=\{Y^{obs}, m^{(t)}\}$, of which 
+$m_k^{(t)}, k=i^{mis}_1,...,i^{mis}_c$ are values in place of the initially NA censored 
+observations and they are functions of $\theta^{(t)}$, constant in terms of the maximization step.  
+So the expected complete log likelihood is \newline
+$logN(y_i|\theta) = \displaystyle -log\sqrt{2\pi\sigma^2} - \frac{(y_i-\mu_i)^2}{2\sigma^2}$ \newline
+$logf(Y|\theta) =\displaystyle \sum_{j=i^{obs}_1}^{i^{obs}_{n-c}} log[N(Y^{obs}_{j}|\theta)I(Y^{obs}_{j}\leq \tau)]
+                             + \sum_{k=i^{mis}_1}^{i^{mis}_c} log[N(m_k|\theta)I(m_k > \tau)] $ \newline
+$Q(\theta|\theta^{(t)}) = \displaystyle E[logf(Y|\theta)|Y^{obs},\theta^{(t)}]
+                        = \sum_{j=i^{obs}_1}^{i^{obs}_{n-c}} logN(Y^{obs}_{j}|\theta) 
+                        + \sum_{k=i^{mis}_1}^{i^{mis}_c} logN(m_k^{(t)}|\theta) $ \newline
+Here, $m_k^{(t)}\sim f(Y_{mis})$, truncated normal distribution,$N(\mu^{(t)},(\sigma^2)^{(t)})I(Y_{mis} > \tau)$ \newline
+\hspace{12 pt} Then, the maximization step would give us updates on both $\theta$ and $m$:\newline
+$m_k^{(t+1)} = E(m_k^{(t)}) = E(Y|Y > \tau) = \mu^{(t)} + \sigma^{(t)}\rho(\tau^*)$,
+where $\displaystyle \rho(\tau^*) = \frac{\phi(\tau^*)}{1-\Phi(\tau^*)}$ , $\tau^*=(\tau-\mu^{(t)})/\sigma^{(t)}$, 
+$\phi(\cdot)$ is the standard normal PDF and $\Phi(\cdot)$ is the standard normal CDF. \newline
+$\beta^{(t)} = (X^TX)^{-1}X^TY$, where $Y=(Y^{obs}, m^{(t)})$ with corresponding $IND$. \newline
+$\displaystyle (\sigma^2)^{(t)} = \widehat{Var}(Y_{obs})+\widehat{Var}(m^{(t)})
+                                = \frac{1}{N}[(Y_{obs}-X_{obs}\beta)^T(Y_{obs}-X_{obs}\beta) 
+                                              + ]$
 
 
 
