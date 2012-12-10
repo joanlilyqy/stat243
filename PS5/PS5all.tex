@@ -236,33 +236,44 @@ hist(log(x*w))
 \section*{Problem 4}
 
 \hspace{12 pt} This is a truncated/censored regression problem. In a given i.i.d. sample, stochastically, $c$ of the $n$ original observations
-will be censored (point $y_i$ will be denoted as NA in the simulated test sample if and only if $y_i > \tau$), with the known 
-indices set $IND=\{i^{obs},i^{mis}\}$ where $j=i^{obs}_1,...,i^{obs}_{n-c}$ and $k=i^{mis}_1,...,i^{mis}_c$. 
+will be censored (point $y_i$ will be denoted as NA in the simulated test sample if and only if $y_i > \tau$). Without loss of generalarity, 
+we can separate the indices set into $i=1, .., c$ with NA and $i=c+1, ..., n$ with $y_i$. 
 Here, we assume a simple linear regression model, 
 $Y\sim X\beta + \epsilon$ with $Y_i\sim N(\beta_0+\beta_1x_i,\sigma^2)$, i.e. define $\beta=(\beta_0,\beta_1), \mu_i=(1, x_i)^T\beta$
 
 \subsubsection*{(a)}
 \hspace{12 pt} EM algorithm is designed to estimate the parameter set, $\theta = (\beta_0,\beta_1,\sigma^2)$. Here, we take the complete data to be
-the available data plus the actual values of the truncated observations, i.e. $Y=\{Y^{obs}, m^{(t)}\}$, of which 
-$m_k^{(t)}, k=i^{mis}_1,...,i^{mis}_c$ are values in place of the initially NA censored 
-observations and they are functions of $\theta^{(t)}$, constant in terms of the maximization step.  
-So the expected complete log likelihood is \newline
-$logN(y_i|\theta) = \displaystyle -log\sqrt{2\pi\sigma^2} - \frac{(y_i-\mu_i)^2}{2\sigma^2}$ \newline
-$logf(Y|\theta) =\displaystyle \sum_{j=i^{obs}_1}^{i^{obs}_{n-c}} log[N(Y^{obs}_{j}|\theta)I(Y^{obs}_{j}\leq \tau)]
-                             + \sum_{k=i^{mis}_1}^{i^{mis}_c} log[N(m_k|\theta)I(m_k > \tau)] $ \newline
-$Q(\theta|\theta^{(t)}) = \displaystyle E[logf(Y|\theta)|Y^{obs},\theta^{(t)}]
-                        = \sum_{j=i^{obs}_1}^{i^{obs}_{n-c}} logN(Y^{obs}_{j}|\theta) 
-                        + \sum_{k=i^{mis}_1}^{i^{mis}_c} logN(m_k^{(t)}|\theta) $ \newline
-Here, $m_k^{(t)}\sim f(Y_{mis})$, truncated normal distribution,$N(\mu^{(t)},(\sigma^2)^{(t)})I(Y_{mis} > \tau)$ \newline
-\hspace{12 pt} Then, the maximization step would give us updates on both $\theta$ and $m$:\newline
-$m_k^{(t+1)} = E(m_k^{(t)}) = E(Y|Y > \tau) = \mu^{(t)} + \sigma^{(t)}\rho(\tau^*)$,
-where $\displaystyle \rho(\tau^*) = \frac{\phi(\tau^*)}{1-\Phi(\tau^*)}$ , $\tau^*=(\tau-\mu^{(t)})/\sigma^{(t)}$, 
-$\phi(\cdot)$ is the standard normal PDF and $\Phi(\cdot)$ is the standard normal CDF. \newline
-$\beta^{(t)} = (X^TX)^{-1}X^TY$, where $Y=(Y^{obs}, m^{(t)})$ with corresponding $IND$. \newline
-$\displaystyle (\sigma^2)^{(t)} = \widehat{Var}(Y_{obs})+\widehat{Var}(m^{(t)})
-                                = \frac{1}{N}[(Y_{obs}-X_{obs}\beta)^T(Y_{obs}-X_{obs}\beta) 
-                                              + ]$
+the available data plus the actual values of the truncated observations, i.e. $W=\{Y, Z}={{y_i},{z_i}}$, 
+of which $z_i, i=1, ... , c$ are values in place of the initially NA censored observations. 
 
+and they are functions of $\theta^{(t)}$, constant in terms of the maximization step.  
+So the expected complete log likelihood is \newline
+$logN(y_i;\theta) = \displaystyle -log\sqrt{2\pi\sigma^2} - \frac{(y_i-\mu_i)^2}{2\sigma^2}$ \newline
+$logf(Y,Z;\theta) =\displaystyle \sum_{i=c+1}^n logN(y_i;\theta) + \sum_{i=1}^c logN(z_i;\theta) $ \newline
+$E[logN(z_i;\theta) | z_i>\tau,\theta^t] = \displaystyle -log\sqrt{2\pi\sigma^2} 
+                                                                -\frac{1}{2\sigma^2}E[(z_i-\mu_i)^2  | z_i>\tau,\theta^t]$\newline
+Now, let $m_{i,t}=E(z_i|z_i>\tau,\theta^t)$ and $v_{i,t}=V(z_i|z_i>\tau,\theta^t)$, we have
+$E[(z_i-\mu_i)^2  | z_i>\tau,\theta^t] = (m_{i,t}-\mu_i)^2+v_{i,t}$\newline
+
+$Q(\theta;\theta^{(t)}) = \displaystyle E[logf(Y,Z;\theta)|Y,\theta^t]
+                        = \sum_{i=c+1}^n logN(y_i;\theta) +
+                        \sum_{i=1}^c logN(m_{i,t};\theta) +
+                        \sum_{i=1}^c \frac{v_{i,t}}{-2\sigma^2}$ \newline
+
+\hspace{12 pt} Then, the maximization step would give us updates on
+$\theta$ very similar to standard linear regression\newline
+
+$\beta^{t+1}} = (X^TX)^{-1}X(W^t)^T$, where $W^t=\{Y, m_t}={{y_i},{m_{i,t}}}$; \newline
+$\displaystyle (\sigma^2)^{t+1} =
+\frac{1}{n}[\sum_{i=c+1}^n(y_i-\mu_i^t)^2 +
+\sum_{i=1}^c(m_{i,t}-\mu_i^t)^2 + \sum_{i=1}^cv_{i,t}]$
+
+\subsubsection*{(b)}
+The reasonble starting values for the 3 parameters as functions of the
+observations are:
+$\beta_0^0 = \frac{1}{n-c}[\sum_{i=c+1}^ny_i]-\beta_1^0\sum_{i=c+1}^nx_i$\newline
+$\beta_1^0 = \frac{\sum_{i=c+1}^ny_i + c\tau}{\sum_{i=1}^nx_i}$\newline
+$(\sigma^2)^0 = \frac{1}{n}[\sum_{i=c+1}^n(y_i-\mu_i)^2+\sum_{i=1}^c(\tau-\mu_i)^2]$\newline
 
 
 

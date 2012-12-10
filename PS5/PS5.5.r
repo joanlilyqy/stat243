@@ -27,3 +27,6 @@ theta["tau"]    <- var(flux) * 0.1
 theta["alpha"]  <- var(flux) * 0.1 / mean(verr)
 
 ## (c) optimize
+
+
+
