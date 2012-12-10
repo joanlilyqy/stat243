@@ -239,41 +239,277 @@ hist(log(x*w))
 will be censored (point $y_i$ will be denoted as NA in the simulated test sample if and only if $y_i > \tau$). Without loss of generalarity, 
 we can separate the indices set into $i=1, .., c$ with NA and $i=c+1, ..., n$ with $y_i$. 
 Here, we assume a simple linear regression model, 
-$Y\sim X\beta + \epsilon$ with $Y_i\sim N(\beta_0+\beta_1x_i,\sigma^2)$, i.e. define $\beta=(\beta_0,\beta_1), \mu_i=(1, x_i)^T\beta$
+$Y\sim X\beta + \epsilon$ with $y_i\sim N(\beta_0+\beta_1x_i,\sigma^2)$, i.e. define $\beta=(\beta_0,\beta_1), \mu_i=(1, x_i)^T\beta$
 
 \subsubsection*{(a)}
 \hspace{12 pt} EM algorithm is designed to estimate the parameter set, $\theta = (\beta_0,\beta_1,\sigma^2)$. Here, we take the complete data to be
-the available data plus the actual values of the truncated observations, i.e. $W=\{Y, Z}={{y_i},{z_i}}$, 
+the available data plus the actual values of the truncated observations, i.e. $\{Y, Z\}=\{\{y_i\},\{z_i\}\}$, 
 of which $z_i, i=1, ... , c$ are values in place of the initially NA censored observations. 
 
 and they are functions of $\theta^{(t)}$, constant in terms of the maximization step.  
 So the expected complete log likelihood is \newline
-$logN(y_i;\theta) = \displaystyle -log\sqrt{2\pi\sigma^2} - \frac{(y_i-\mu_i)^2}{2\sigma^2}$ \newline
-$logf(Y,Z;\theta) =\displaystyle \sum_{i=c+1}^n logN(y_i;\theta) + \sum_{i=1}^c logN(z_i;\theta) $ \newline
-$E[logN(z_i;\theta) | z_i>\tau,\theta^t] = \displaystyle -log\sqrt{2\pi\sigma^2} 
-                                                                -\frac{1}{2\sigma^2}E[(z_i-\mu_i)^2  | z_i>\tau,\theta^t]$\newline
-Now, let $m_{i,t}=E(z_i|z_i>\tau,\theta^t)$ and $v_{i,t}=V(z_i|z_i>\tau,\theta^t)$, we have
-$E[(z_i-\mu_i)^2  | z_i>\tau,\theta^t] = (m_{i,t}-\mu_i)^2+v_{i,t}$\newline
+$logN(y_i;\theta) = \displaystyle -log\sqrt{2\pi\sigma^2} - \frac{(y_i-\mu_i)^2}{2\sigma^2}$; $\mu_i = \beta_0 + \beta_1x_i$ \newline
+$logf(Y,Z;\theta) = \displaystyle \sum_{i=c+1}^n logN(y_i;\theta) + \sum_{i=1}^c logN(z_i;\theta) $ \newline
+$E[logN(z_i;\theta) | Y,X,\theta^{(t)}] = E[logN(z_i;\theta) | z_i>\tau,\theta = \theta^{(t)}] 
+                        = \displaystyle -log\sqrt{2\pi\sigma^2}-\frac{1}{2\sigma^2}E[(z_i-\mu_i)^2  | z_i>\tau,\theta = \theta^{(t)}]$\newline
+Now, let $\displaystyle m_i^{(t)}=E(z_i|z_i>\tau,\theta = \theta^{(t)})$ and $\displaystyle v_i^{(t)}=V(z_i|z_i>\tau,\theta = \theta^{(t)})$, \newline
+where $\displaystyle m_i^{(t)} = \mu_i^{(t)} + \sigma^{(t)}\rho(\tau_i^{*(t)})$ 
+and $\displaystyle v_i^{(t)} = (\sigma^2)^{(t)}(1 + \tau_i^{*(t)}\rho(\tau_i^{*(t)}) - \rho^2(\tau_i^{*(t)}))$ \newline
+of which $\displaystyle \mu_i^{(t)} = \beta_0^{(t)} + \beta_1^{(t)}x_i$, $\displaystyle \tau_i^{*(t)} = (\tau - \mu_i^{(t)})/\sigma^{(t)}$ ,\newline
+$\displaystyle \rho(\tau_i^{*(t)}) = \frac{\phi(\tau_i^{*(t)})}{1 - \Phi(\tau_i^{*(t)})}$ 
+and $\phi(\cdot)$ is the standard normal PDF, $\Phi(\cdot)$ is the standard normal CDF.\newline 
 
-$Q(\theta;\theta^{(t)}) = \displaystyle E[logf(Y,Z;\theta)|Y,\theta^t]
+We have $E[(z_i-\mu_i)^2 | z_i>\tau,\theta = \theta^{(t)}] = (m_i^{(t)}-\mu_i)^2+v_i^{(t)}; So,$\newline
+
+$Q(\theta;\theta^{(t)}) = \displaystyle E[logf(Y,Z;\theta)|Y,X,\theta^{(t)}]
                         = \sum_{i=c+1}^n logN(y_i;\theta) +
-                        \sum_{i=1}^c logN(m_{i,t};\theta) +
-                        \sum_{i=1}^c \frac{v_{i,t}}{-2\sigma^2}$ \newline
+                          \sum_{i=1}^c logN(m_i^{(t)};\theta) +
+                          \sum_{i=1}^c \frac{v_i^{(t)}}{-2\sigma^2}$ \newline
 
-\hspace{12 pt} Then, the maximization step would give us updates on
-$\theta$ very similar to standard linear regression\newline
+Then, the maximization step would give us updates on $\theta$ very similar to standard linear regression;\newline
 
-$\beta^{t+1}} = (X^TX)^{-1}X(W^t)^T$, where $W^t=\{Y, m_t}={{y_i},{m_{i,t}}}$; \newline
-$\displaystyle (\sigma^2)^{t+1} =
-\frac{1}{n}[\sum_{i=c+1}^n(y_i-\mu_i^t)^2 +
-\sum_{i=1}^c(m_{i,t}-\mu_i^t)^2 + \sum_{i=1}^cv_{i,t}]$
+$\beta^{(t+1)} = (X^TX)^{-1}X^TW^{(t)}$, where $W^{(t)}=\{Y, M^{(t)}\}=\{\{y_i\},\{m_i^{(t)}\}\}$; \newline
+
+$\displaystyle (\sigma^2)^{(t+1)} =
+\frac{1}{n}[\sum_{i=c+1}^n(y_i-\mu_i^{(t)})^2 + \sum_{i=1}^c(m_i^{(t)}-\mu_i^{(t)})^2 + \sum_{i=1}^cv_i^{(t)}]$
 
 \subsubsection*{(b)}
-The reasonble starting values for the 3 parameters as functions of the
-observations are:
-$\beta_0^0 = \frac{1}{n-c}[\sum_{i=c+1}^ny_i]-\beta_1^0\sum_{i=c+1}^nx_i$\newline
-$\beta_1^0 = \frac{\sum_{i=c+1}^ny_i + c\tau}{\sum_{i=1}^nx_i}$\newline
-$(\sigma^2)^0 = \frac{1}{n}[\sum_{i=c+1}^n(y_i-\mu_i)^2+\sum_{i=1}^c(\tau-\mu_i)^2]$\newline
+\hspace{12 pt} The reasonble starting values for the 3 parameters as functions of the observations are:\newline
+$\displaystyle \beta_0^{(0)} = \bar y - \beta_1^{(0)}\bar x$\newline
+$\displaystyle \beta_1^{(0)} = [(n-c)\bar y + c\tau]/{\bar x}$\newline
+$\displaystyle (\sigma^2)^{(0)} = \frac{1}{n-c}[\sum_{i=c+1}^n(y_i-\beta_0^{(0)}-\beta_1^{(0)}x_i)^2]$\newline
+
+\subsubsection*{(c)}
+\hspace{12 pt} In order to test the implemeted EM algorithm for parameter estimation, we have simulated data for this purpose. For a sample size of $n=100$,
+we make the true parameters such that with complete data, $\hat\beta_1/se(\hat\beta_1)\approx3$, 
+i.e. $\sigma^2 = (\beta_1/3)^2\sum_{i=1}^n(x_i-\bar x)^2$. The R function $EM.censor$ takes in $x,y,\tau$ and estimate $\theta$ with initializatiion
+from (b) and $lm()$ for updating $\beta$. The criteria for deciding when to stop the optimization is with $diff < tol$, i.e. the difference between
+the last and current $\theta$ is below the fixed tolerance value.
+
+%% begin.rcode PS54c_EM, cache=TRUE, results="markup"
+%%#### (c) EM implementation
+EM.censor <- function(x,y,tau){
+	obs <- which(!is.na(y)) # observed y indices
+	cen <- which(is.na(y))  # censored y indices
+	c <- length(cen)
+	n <- length(y)  # sample size
+	ny <- y #censored y's to be updated by EM
+	# simulation setup 
+	tol  <- 1e-8
+	iter <- 0
+	lim  <- 1000
+	beta0.trace  <- matrix(NA, lim, 1)
+	beta1.trace  <- matrix(NA, lim, 1)
+	sigma2.trace <- matrix(NA, lim, 1)
+	more = TRUE
+	# initialization
+	beta1  <- ( (n-c)*mean(y[obs]) + c*tau )/(n*mean(x))
+	beta0  <- mean(y[obs]) - beta1*mean(x)
+	sigma2 <- sum((y[obs]-beta0-beta1*x[obs])^2)/(n-c)
+	# auxiliary function
+	rho <- function(x){
+	  return ( dnorm(x) / (1 - pnorm(x)) )
+	}
+	# main optimization
+	while(more){
+	  iter <- iter + 1
+	  # E-step
+	  mu <- beta0 + beta1*x
+	  tauS <- (tau - mu)/sqrt(sigma2)
+	  ny[cen] <- mu[cen] + sqrt(sigma2)*rho(tauS[cen]) # E(Z)
+	  vy <- sigma2*(1 + tauS[cen]*rho(tauS[cen]) - rho(tauS[cen])^2) # V(Z)
+	  # M-step
+	  fit <- lm(ny~x) # LS fit for beta MLEs
+	  b0 <- fit$coefficients[1]
+	  b1 <- fit$coefficients[2]
+	  sig2 <- (sum(fit$residuals^2) + sum(vy))/n # MLE of sigma2
+	  # convergence
+	  diff.th <- abs(beta0-b0) + abs(beta1-b1) + abs(log(sigma2)-log(sig2))
+	  more <- (diff.th > tol) # check tol
+	  # update theta
+	  beta0 <- b0
+	  beta1 <- b1
+	  sigma2 <- sig2
+	  # record trace
+	  beta0.trace[iter]  <- beta0
+	  beta1.trace[iter]  <- beta1
+	  sigma2.trace[iter] <- sigma2
+	}
+	#results
+	theta.result <- c(beta0,beta1,sigma2)
+	names(theta.result) <- c("beta0", "beta1", "sigma2")
+	print(theta) #global true parameter
+	print(iter)
+	print(theta.result)
+	#plots
+	par(mfrow=c(3,1),mar=c(4,4,2,2),cex= 10, cex.main= 1.2);
+	plot(1:iter,beta0.trace[1:iter],xlab="iteration",ylab="beta0","l")
+	plot(1:iter,beta1.trace[1:iter],xlab="iteration",ylab="beta1","l")
+	plot(1:iter,sigma2.trace[1:iter],xlab="iteration",ylab="sigma2","l")
+	par(mfrow=c(1,1),cex= 10, cex.main= 1.2);
+	plot(x,y,ylim=c(min(y[obs])-1,max(y[obs])+2)) # plot data
+	points(x[cen],ny[cen],type = "p",pch=20)
+	lines(c(sort(x)[1],sort(x)[n]),c(beta0+beta1*sort(x)[1],beta0+beta1*sort(x)[n])) # LS line
+}
+%% end.rcode
+
+The test case (a) with a modest proportion of exceedances expected is shown below.
+
+%% begin.rcode PS54c_testa, cache=TRUE, results="markup", warning=FALSE
+#### test data generation
+set.seed(0)
+n <- 100 # sample size
+c <- n * 0.2 # test (a)/(b) exceedance=20%/80%
+# true parameter values
+theta <- rep(NA, 3)
+names(theta) <- c("beta0", "beta1", "sigma2")
+theta["beta0"]  <- 0.5
+theta["beta1"]  <- 2
+x <- runif(n)
+theta["sigma2"] <- (theta["beta1"]/3)^2*sum( (x-mean(x))^2 )
+# simulated data
+e <- rnorm(n, mean = 0, sd = sqrt(theta["sigma2"]))
+y <- theta["beta0"] + theta["beta1"]*x + e
+sort.y <- sort(y, decreasing = TRUE)
+tau <- sort.y[c+1] # threshold
+y[which(y>tau)] <- as.numeric("NA")
+%% end.rcode
+%% begin.rcode PS54c_a, cache=TRUE, results="markup", dev='cairo_pdf', fig.height=60, fig.align="center"
+#### EM result
+EM.censor(x,y,tau)
+%% end.rcode
+
+\newpage
+The test case (b) with a high proportion of exceedances expected is shown below.
+%% begin.rcode PS54c_b, eval=FALSE
+#### EM result
+EM.censor(x,y,tau)
+%% end.rcode
+%% begin.rcode PS54c_testb, cache=TRUE, echo=FALSE, results="markup", warning=FALSE, dev='cairo_pdf', fig.height=50, fig.align="center"
+#### test data generation
+set.seed(0)
+n <- 100 # sample size
+c <- n * 0.8 # test (a)/(b) exceedance=20%/80%
+# true parameter values
+theta <- rep(NA, 3)
+names(theta) <- c("beta0", "beta1", "sigma2")
+theta["beta0"]  <- 0.5
+theta["beta1"]  <- 2
+x <- runif(n)
+theta["sigma2"] <- (theta["beta1"]/3)^2*sum( (x-mean(x))^2 )
+# simulated data
+e <- rnorm(n, mean = 0, sd = sqrt(theta["sigma2"]))
+y <- theta["beta0"] + theta["beta1"]*x + e
+sort.y <- sort(y, decreasing = TRUE)
+tau <- sort.y[c+1] # threshold
+y[which(y>tau)] <- as.numeric("NA")
+#### EM result
+EM.censor(x,y,tau)
+%% end.rcode
+
+
+\newpage
+\subsubsection*{(d)}
+\hspace{12 pt} A different approach to this problem will be just directly minimize the negative log likelihood of the data.
+For the censored observations, we just involve the likelihood terms, $P(Y_i>\tau), Y_i\sim N(\mu_i,\sigma^2)$. We use $optim()$
+with BFGS option in R to estimate the parameters and their standard errors. 
+
+%% begin.rcode PS54c_BFGS, cache=TRUE, results="markup"
+%%#### (d) BFGS implementation
+BFGS.censor <- function(x,y,tau){
+	obs <- which(!is.na(y)) # observed y indices
+	cen <- which(is.na(y))  # censored y indices
+	c <- length(cen)
+	n <- length(y)  # sample size
+	# initialization
+	beta1  <- ( (n-c)*mean(y[obs]) + c*tau )/(n*mean(x))
+	beta0  <- mean(y[obs]) - beta1*mean(x)
+	sigma2 <- sum((y[obs]-beta0-beta1*x[obs])^2)/(n-c)
+	init0 <- c(beta0,beta1,sigma2)
+	# log liklihood
+	pp.lik <- function(par, x, y, tau, obs, cen) {
+	  b0   <- par[1]
+	  b1   <- par[2]
+	  sig2 <- par[3]
+		mu  <- b0 + b1*x
+		if (sig2 <= 0){
+			sig <- 1e-6
+		}
+		else{
+			sig <- sqrt(sig2)
+		}
+		obs.lik <- sum(log(dnorm(y[obs], mean = mu[obs], sd = sig)))
+		cen.lik <- sum(log(pnorm(tau, mean = mu[cen], sd = sig, lower.tail=F)))
+		return (-(obs.lik + cen.lik))
+	}
+	# optimize
+	opt <- optim(init0, pp.lik, x = x, y = y, tau = tau, obs = obs, cen = cen, 
+	method = 'BFGS', control = list(trace = TRUE, parscale = c(1,1,10)), hessian = TRUE) 
+	# results
+	print(theta)
+	cat(opt$par,"\t theta \n")
+	cat(sqrt(diag(solve(opt$hessian))), "\t se(theta) \n")
+}
+%% end.rcode
+
+The test case (a) with a modest proportion of exceedances expected is shown below. It requires $iter=10$ for BFGS, while $iter=17$ for EM.
+%% begin.rcode PS54d_a, eval=FALSE
+#### BFGS result
+BFGS.censor(x,y,tau)
+%% end.rcode
+\newpage
+%% begin.rcode PS54d_testa, cache=TRUE, echo=FALSE, results="markup", warning=FALSE, dev='cairo_pdf', fig.height=50, fig.align="center"
+#### test data generation
+set.seed(0)
+n <- 100 # sample size
+c <- n * 0.2 # test (a)/(b) exceedance=20%/80%
+# true parameter values
+theta <- rep(NA, 3)
+names(theta) <- c("beta0", "beta1", "sigma2")
+theta["beta0"]  <- 0.5
+theta["beta1"]  <- 2
+x <- runif(n)
+theta["sigma2"] <- (theta["beta1"]/3)^2*sum( (x-mean(x))^2 )
+# simulated data
+e <- rnorm(n, mean = 0, sd = sqrt(theta["sigma2"]))
+y <- theta["beta0"] + theta["beta1"]*x + e
+sort.y <- sort(y, decreasing = TRUE)
+tau <- sort.y[c+1] # threshold
+y[which(y>tau)] <- as.numeric("NA")
+#### BFGS result
+BFGS.censor(x,y,tau)
+%% end.rcode
+
+
+
+The test case (b) with a high proportion of exceedances expected is shown below. It requires $iter=42$ for BFGS, while $iter=216$ for EM.
+%% begin.rcode PS54d_b, eval=FALSE
+#### BFGS result
+BFGS.censor(x,y,tau)
+%% end.rcode
+%% begin.rcode PS54d_testb, cache=TRUE, echo=FALSE, results="markup", warning=FALSE, dev='cairo_pdf', fig.height=50, fig.align="center"
+#### test data generation
+set.seed(0)
+n <- 100 # sample size
+c <- n * 0.8 # test (a)/(b) exceedance=20%/80%
+# true parameter values
+theta <- rep(NA, 3)
+names(theta) <- c("beta0", "beta1", "sigma2")
+theta["beta0"]  <- 0.5
+theta["beta1"]  <- 2
+x <- runif(n)
+theta["sigma2"] <- (theta["beta1"]/3)^2*sum( (x-mean(x))^2 )
+# simulated data
+e <- rnorm(n, mean = 0, sd = sqrt(theta["sigma2"]))
+y <- theta["beta0"] + theta["beta1"]*x + e
+sort.y <- sort(y, decreasing = TRUE)
+tau <- sort.y[c+1] # threshold
+y[which(y>tau)] <- as.numeric("NA")
+#### BFGS result
+BFGS.censor(x,y,tau)
+%% end.rcode
+
+
 
 
 
