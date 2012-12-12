@@ -600,14 +600,14 @@ function(par) {
 	-ll
 })
 %% end.rcode
-%% begin.rcode PS55c_2, cache=TRUE, results="markup"
+%% begin.rcode PS55c_2, cache=TRUE, results="markup", warning = FALSE
 init0 <- theta
 opt1 <- optim(par = init0, fn = nn.lik, 
-control = list(trace = TRUE, parscale = init0, reltol = 1e-6, maxit = 150), hessian = TRUE)
+control = list(trace = TRUE, parscale = init0, reltol = 1e-4, maxit = 80), hessian = TRUE)
 cat("theta \n", opt1$par, "\n")
 cat("se(theta) \n", sqrt(diag(solve(opt1$hessian))), "\n")
 %% end.rcode
-%% begin.rcode PS55c_3, cache=TRUE, results="markup"
+%% begin.rcode PS55c_3, cache=TRUE, results="markup", warning = FALSE
 init0 <- theta
 opt2 <- optim(par = init0, fn = nn.lik, method = 'BFGS', 
 control = list(trace = TRUE, parscale = init0, reltol = 1e-4, maxit = 20))

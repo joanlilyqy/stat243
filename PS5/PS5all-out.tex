@@ -1,0 +1,958 @@
+\documentclass{article}\usepackage{graphicx, color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\definecolor{fgcolor}{rgb}{0.2, 0.2, 0.2}
+\newcommand{\hlnumber}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlfunctioncall}[1]{\textcolor[rgb]{0.501960784313725,0,0.329411764705882}{\textbf{#1}}}%
+\newcommand{\hlstring}[1]{\textcolor[rgb]{0.6,0.6,1}{#1}}%
+\newcommand{\hlkeyword}[1]{\textcolor[rgb]{0,0,0}{\textbf{#1}}}%
+\newcommand{\hlargument}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hlcomment}[1]{\textcolor[rgb]{0.180392156862745,0.6,0.341176470588235}{#1}}%
+\newcommand{\hlroxygencomment}[1]{\textcolor[rgb]{0.43921568627451,0.47843137254902,0.701960784313725}{#1}}%
+\newcommand{\hlformalargs}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hleqformalargs}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hlassignement}[1]{\textcolor[rgb]{0,0,0}{\textbf{#1}}}%
+\newcommand{\hlpackage}[1]{\textcolor[rgb]{0.588235294117647,0.709803921568627,0.145098039215686}{#1}}%
+\newcommand{\hlslot}[1]{\textit{#1}}%
+\newcommand{\hlsymbol}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlprompt}[1]{\textcolor[rgb]{0.2,0.2,0.2}{#1}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{\today}
+\chead{Ying Qiao SID:21412301}
+\rhead{Stat243 Fa12: Problem Set 5}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+
+%% for inline R code: if the inline code is not correctly parsed, you will see a message
+\newcommand{\rinline}[1]{SOMETHING WORNG WITH knitr}
+
+
+
+
+\begin{document}
+\section*{Problem 2}
+
+\subsubsection*{(a)}
+
+\hspace{12 pt} Considering the adaptive rejection sampling (ARS) algorithm, we build a set of $p$ points,
+$x_1,...,x_p$ and an upper envelope function that is linear on the log scale withing each interval, i.e.
+$f(x) = exp(a_i+b_ix)$ for $x\in(x_{i-1},x_i)$
+
+We need to normalize this exponentiated upper envelop function in order to have a density of interest that
+we can draw samples from.\newline
+The normalization factor $N_f$ is constant,\newline
+$N_f = \displaystyle\sum_{i=1}^p \int_{x_{i-1}}^{x_i} exp(a_i+b_ix)dx 
+     = \displaystyle\sum_{i=1}^p \frac{e^{a_i}}{b_i}[e^{b_ix_i}-e^{b_ix_{i-1}}]$.\newline
+The probability associated with each interval $P_i$ is, \newline
+$P_i = Prob(x\in(x_{i-1},x_i)) = \frac{1}{N_f}\displaystyle\int_{x_{i-1}}^{x_i}exp(a_i+b_ix)dx
+     = \frac{e^{a_i}}{N_fb_i}[e^{b_ix_i}-e^{b_ix_{i-1}}]$.\newline
+
+
+\subsubsection*{(b)}
+
+\hspace{12 pt} We want to draw $x$ from the $i$th interval using the inverse CDF method.\newline
+The CDF function $F(x')$ is,\newline
+$F(x') = Prob(x\in(x_{i-1},x')) = \frac{1}{N_f}\displaystyle\int_{x_{i-1}}^{x'}exp(a_i+b_ix)dx
+        = \frac{e^{a_i}}{N_fb_i}[e^{b_ix'}-e^{b_ix_{i-1}}]$\newline
+We will draw $Z\sim Unif(0,1)$ and set $x = F^{-1}(z)$ for $i$th interval to get $X\sim F$,\newline
+$x = F^{-1}(z) = \frac{1}{b_i} \{\displaystyle log[N_fb_iz + exp(a_i+b_ix_{i-1})] -a_i\}$
+
+\subsubsection*{(c)}
+
+\hspace{12 pt} The psuedo-code style software that would implement ARS is listed below.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{# Problem 5.2: ARS [Reference]}
+\hlcomment{# http://www.amsta.leeds.ac.uk/~wally.gilks/adaptive.rejection/web_page/Welcome.html}
+
+\hlcomment{# calculate the intercept and slope of the line set by succecutive points}
+lineCoef <- \hlfunctioncall{function}(x, y) \{
+\hlcomment{    # x in ascending order}
+    \hlfunctioncall{return}(\hlfunctioncall{data.frame}(intercept = a, slope = b))
+\}
+
+\hlcomment{# calculate the intersection points above density curve given the input}
+\hlcomment{# points on the density curve}
+intersec <- \hlfunctioncall{function}(x, y) \{
+\hlcomment{    # x and y are the coordinates of the n points}
+\hlcomment{    # get line info for n-1 intersection points}
+    ab <- \hlfunctioncall{lineCoef}(x = x, y = y)
+\hlcomment{    # extrapolate intersection points outside the curve}
+    qx[i] <- (a[i + 1] - a[i - 1])/(b[i - 1] - b[i + 1])
+    qy[i] <- a[i - 1] + b[i - 1] * qx[i]
+    \hlfunctioncall{return}(\hlfunctioncall{cbind}(qx, qy))
+\}
+
+\hlcomment{# get the set of points that construct the envelop}
+envelop <- \hlfunctioncall{function}(x, y) \{
+\hlcomment{    # x and y are input points on the curve}
+    Q <- \hlfunctioncall{intersec}(x, y)  \hlcomment{# all the upper points}
+    T <- PQ[\hlfunctioncall{order}(PQ)]  \hlcomment{# in order}
+    \hlfunctioncall{return}(\hlfunctioncall{data.frame}(T))
+\}
+
+\hlcomment{# function that initializes input to sampling algorithm; The inner and env}
+\hlcomment{# element include the points and lines info for the inner chords and}
+\hlcomment{# envelopes respectively.  The region element includes the line info for}
+\hlcomment{# each region that is needed to be calculated}
+init <- \hlfunctioncall{function}(x, y) \{
+\hlcomment{    # order x and y in the increasing order of x}
+    inner <- \hlfunctioncall{list}(pts = \hlfunctioncall{data.frame}(x = x, y = y), line = \hlfunctioncall{lineCoef}(x, y))
+    env <- \hlfunctioncall{list}(pts = \hlfunctioncall{envelop}(x, y), line = \hlfunctioncall{lineCoef}(xy.env[1], xy.env[2]))
+    reg <- \hlfunctioncall{rbind}(ab.inner, ab.env)
+    \hlfunctioncall{return}(\hlfunctioncall{list}(inner = inner, env = env, region = ab.reg))
+\}
+
+\hlcomment{# function to compute the areas of the envelop}
+area <- \hlfunctioncall{function}(pts, lb = NULL, rb = NULL) \{
+\hlcomment{    # init from initialization}
+\hlcomment{    # evaluation regions and points}
+    reg <- pts$region
+    x <- pts$env$pts$x
+\hlcomment{    # calculate the area under the envelope}
+    ar[i] <- (\hlfunctioncall{exp}(a + b * x[i + 1]) - \hlfunctioncall{exp}(a + b * x[i]))/b
+\hlcomment{    # normalize area and compute cumulatives}
+    sum.ar <- \hlfunctioncall{sum}(ar)  \hlcomment{# raw total area}
+    ar <- ar/sum.ar  \hlcomment{# normalized - sum to 1}
+    cum.ar <- \hlfunctioncall{cumsum}(ar)  \hlcomment{# cummulative}
+    \hlfunctioncall{return}(\hlfunctioncall{list}(ar = ar, cum.ar = cum.ar, sum.ar = sum.ar))
+\}
+
+\hlcomment{# Draw sample from envelope}
+sample.env <- \hlfunctioncall{function}(pts, lb = NULL, rb = NULL) \{
+\hlcomment{    # calculate the area under the envelope}
+    ar <- \hlfunctioncall{area}(pts, lb = lb, rb = rb)
+    reg <- pts$region
+    x <- pts$env$pts$x
+\hlcomment{    # line coefficients for that region}
+    a <- reg[rn, 1]
+    b <- reg[rn, 2]
+\hlcomment{    # sample a point from the envelope using inversion method}
+    u <- \hlfunctioncall{runif}(1)
+\hlcomment{    # invert cumulative df to get sample point}
+    sx <- (\hlfunctioncall{log}(u * b * ar$sum.ar + \hlfunctioncall{exp}(b * x[rn] + a)) - a)/b
+    \hlfunctioncall{return}(sx)
+\}
+
+\hlcomment{# test whether the sample should be accepted or not and store the}
+\hlcomment{# evaluation information of the target function}
+test.sample <- \hlfunctioncall{function}(sx, pts, func) \{
+    x <- pts$env$pts$x
+    u <- \hlfunctioncall{runif}(1)
+    \hlfunctioncall{if} (u < \hlfunctioncall{exp}(r[1] - r[2])) \{
+\hlcomment{        # simple acceptance step}
+        accept <- 1
+    \} else \{
+\hlcomment{        # evaluation and rejection step}
+        \hlfunctioncall{if} (u < \hlfunctioncall{exp}(\hlfunctioncall{func}(sx) - r[2])) \{
+            accept <- 1
+        \}
+        \hlfunctioncall{if} (!(sx %in% x)) \{
+\hlcomment{            # updating step: update pts}
+            x <- \hlfunctioncall{c}(x, sx)
+            y <- \hlfunctioncall{c}(y, sy)
+            pts <- \hlfunctioncall{init}(x, y)
+        \}
+    \}
+    \hlfunctioncall{return}(\hlfunctioncall{list}(accept = accept, pts = pts, xeval = x))
+\}
+
+\hlcomment{# main function to implement the ARS algorithm; n: number of samples}
+\hlcomment{# wanted; func: the log density; xinit: initial values for the X's, at}
+\hlcomment{# least 3; lb: left bound; rb: right bound; The output is a list of 4}
+\hlcomment{# elements; sample: the sample values; xeval: the new x's that cause the}
+\hlcomment{# func to be evaluated; pts: the points and line info for the chords and}
+\hlcomment{# envelop;}
+ars <- \hlfunctioncall{function}(n, func, xinit, lb = NULL, rb = NULL) \{
+\hlcomment{    # initialize}
+    s <- \hlfunctioncall{c}()
+    yinit <- \hlfunctioncall{func}(xinit)
+    pts <- \hlfunctioncall{init}(xinit, yinit)
+\hlcomment{    # sample}
+    \hlfunctioncall{while} (\hlfunctioncall{length}(s) < n) \{
+        sx <- \hlfunctioncall{sample.env}(pts, lb = lb, rb = rb)
+        tsx <- \hlfunctioncall{test.sample}(sx, pts, func)
+        \hlfunctioncall{if} (tsx$accept) 
+            s <- \hlfunctioncall{c}(s, sx)
+        pts <- tsx$pts
+        xeval <- tsx$xeval
+    \}
+    \hlfunctioncall{return}(\hlfunctioncall{list}(sample = s, xeval = xeval, pts = pts))
+\}
+
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+
+\newpage
+\section*{Problem 3}
+We will explore the need in importance sampling that the sampling density have heavier tails than
+the density of interest. We will estimate $EX$ and $E(X^2)$ with respect to density $f$ in this problem.
+
+\subsubsection*{(a)}
+\hspace{12 pt} Suppose $f\sim N(0,1)$ with sampling density $g\sim t(df=3)$. We sample $m=10000$ points
+to extract histograms of estimates and weights in order to get an idea whether $Var(\hat\mu)$ is large.
+
+As you can see from the results shown below, the variance is not so large since there are not many extreme
+weights in the samples.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{## (a) we want to estimate EX and VX for a standrad normal drawn from a t}
+\hlcomment{## with 3 degrees of freedom}
+m <- 10000  \hlcomment{# number of samples for each estimator}
+\hlfunctioncall{set.seed}(0)
+x <- \hlfunctioncall{rt}(m, df = 3)  \hlcomment{# i.e sample from g being a t with df=3}
+f <- \hlfunctioncall{dnorm}(x)  \hlcomment{# density of x under f}
+g <- \hlfunctioncall{dt}(x, df = 3)  \hlcomment{# density of x under g}
+w <- f/g  \hlcomment{# weights}
+\hlfunctioncall{mean}(x * w)  \hlcomment{#EX}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.02107
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}((x * w)^2)  \hlcomment{#VX}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9225
+\end{verbatim}
+\begin{alltt}
+
+\hlfunctioncall{par}(mfrow = \hlfunctioncall{c}(1, 2), cex = 10, cex.main = 1.2)
+\hlfunctioncall{hist}(w)
+\hlfunctioncall{hist}(x * w)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS53a} 
+
+}
+
+
+
+\end{knitrout}
+
+
+\subsubsection*{(b)}
+\hspace{12 pt} Suppose $f\sim t(df=3)$ with sampling density $g\sim N(0,1)$. We sample $m=10000$ points
+to extract histograms of estimates and weights in order to get an idea whether $Var(\hat\mu)$ is large.
+
+As the sampling density $t(df=3)$ has less heavier tails than the density of interest $N(0,1)$, there are
+many extreme weights that have a very strong influence on the estimation variance, as shown below.
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{## (b) we want to estimate EX and EX^2 for a t with v=3 drawn from a}
+\hlcomment{## standard normal}
+m <- 10000  \hlcomment{# number of samples for each estimator}
+\hlfunctioncall{set.seed}(0)
+x <- \hlfunctioncall{rnorm}(m)  \hlcomment{# i.e sample from g being a standard normal}
+f <- \hlfunctioncall{dt}(x, df = 3)  \hlcomment{# density of x under f}
+g <- \hlfunctioncall{dnorm}(x)  \hlcomment{# density of x under g}
+w <- f/g  \hlcomment{# weights}
+\hlfunctioncall{mean}(x * w)  \hlcomment{#EX}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.004417
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}((x * w)^2)  \hlcomment{#VX}
+\end{alltt}
+\begin{verbatim}
+## [1] 4.846
+\end{verbatim}
+\begin{alltt}
+
+\hlfunctioncall{par}(mfrow = \hlfunctioncall{c}(1, 2), cex = 10, cex.main = 1.2)
+\hlfunctioncall{hist}(\hlfunctioncall{log}(w))
+\hlfunctioncall{hist}(\hlfunctioncall{log}(x * w))
+\end{alltt}
+
+
+{\ttfamily\noindent\textcolor{warningcolor}{\#\# Warning: NaNs produced}}\end{kframe}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS53b} 
+
+}
+
+
+
+\end{knitrout}
+
+
+
+\newpage
+\section*{Problem 4}
+
+\hspace{12 pt} This is a truncated/censored regression problem. In a given i.i.d. sample, stochastically, $c$ of the $n$ original observations
+will be censored (point $y_i$ will be denoted as NA in the simulated test sample if and only if $y_i > \tau$). Without loss of generalarity, 
+we can separate the indices set into $i=1, .., c$ with NA and $i=c+1, ..., n$ with $y_i$. 
+Here, we assume a simple linear regression model, 
+$Y\sim X\beta + \epsilon$ with $y_i\sim N(\beta_0+\beta_1x_i,\sigma^2)$, i.e. define $\beta=(\beta_0,\beta_1), \mu_i=(1, x_i)^T\beta$
+
+\subsubsection*{(a)}
+\hspace{12 pt} EM algorithm is designed to estimate the parameter set, $\theta = (\beta_0,\beta_1,\sigma^2)$. Here, we take the complete data to be
+the available data plus the actual values of the truncated observations, i.e. $\{Y, Z\}=\{\{y_i\},\{z_i\}\}$, 
+of which $z_i, i=1, ... , c$ are values in place of the initially NA censored observations. 
+
+and they are functions of $\theta^{(t)}$, constant in terms of the maximization step.  
+So the expected complete log likelihood is \newline
+$logN(y_i;\theta) = \displaystyle -log\sqrt{2\pi\sigma^2} - \frac{(y_i-\mu_i)^2}{2\sigma^2}$; $\mu_i = \beta_0 + \beta_1x_i$ \newline
+$logf(Y,Z;\theta) = \displaystyle \sum_{i=c+1}^n logN(y_i;\theta) + \sum_{i=1}^c logN(z_i;\theta) $ \newline
+$E[logN(z_i;\theta) | Y,X,\theta^{(t)}] = E[logN(z_i;\theta) | z_i>\tau,\theta = \theta^{(t)}] 
+                        = \displaystyle -log\sqrt{2\pi\sigma^2}-\frac{1}{2\sigma^2}E[(z_i-\mu_i)^2  | z_i>\tau,\theta = \theta^{(t)}]$\newline
+Now, let $\displaystyle m_i^{(t)}=E(z_i|z_i>\tau,\theta = \theta^{(t)})$ and $\displaystyle v_i^{(t)}=V(z_i|z_i>\tau,\theta = \theta^{(t)})$, \newline
+where $\displaystyle m_i^{(t)} = \mu_i^{(t)} + \sigma^{(t)}\rho(\tau_i^{*(t)})$ 
+and $\displaystyle v_i^{(t)} = (\sigma^2)^{(t)}(1 + \tau_i^{*(t)}\rho(\tau_i^{*(t)}) - \rho^2(\tau_i^{*(t)}))$ \newline
+of which $\displaystyle \mu_i^{(t)} = \beta_0^{(t)} + \beta_1^{(t)}x_i$, $\displaystyle \tau_i^{*(t)} = (\tau - \mu_i^{(t)})/\sigma^{(t)}$ ,\newline
+$\displaystyle \rho(\tau_i^{*(t)}) = \frac{\phi(\tau_i^{*(t)})}{1 - \Phi(\tau_i^{*(t)})}$ 
+and $\phi(\cdot)$ is the standard normal PDF, $\Phi(\cdot)$ is the standard normal CDF.\newline 
+
+We have $E[(z_i-\mu_i)^2 | z_i>\tau,\theta = \theta^{(t)}] = (m_i^{(t)}-\mu_i)^2+v_i^{(t)}; So,$\newline
+
+$Q(\theta;\theta^{(t)}) = \displaystyle E[logf(Y,Z;\theta)|Y,X,\theta^{(t)}]
+                        = \sum_{i=c+1}^n logN(y_i;\theta) +
+                          \sum_{i=1}^c logN(m_i^{(t)};\theta) +
+                          \sum_{i=1}^c \frac{v_i^{(t)}}{-2\sigma^2}$ \newline
+
+Then, the maximization step would give us updates on $\theta$ very similar to standard linear regression;\newline
+
+$\beta^{(t+1)} = (X^TX)^{-1}X^TW^{(t)}$, where $W^{(t)}=\{Y, M^{(t)}\}=\{\{y_i\},\{m_i^{(t)}\}\}$; \newline
+
+$\displaystyle (\sigma^2)^{(t+1)} =
+\frac{1}{n}[\sum_{i=c+1}^n(y_i-\mu_i^{(t)})^2 + \sum_{i=1}^c(m_i^{(t)}-\mu_i^{(t)})^2 + \sum_{i=1}^cv_i^{(t)}]$
+
+\subsubsection*{(b)}
+\hspace{12 pt} The reasonble starting values for the 3 parameters as functions of the observations are:\newline
+$\displaystyle \beta_0^{(0)} = \bar y - \beta_1^{(0)}\bar x$\newline
+$\displaystyle \beta_1^{(0)} = [(n-c)\bar y + c\tau]/{\bar x}$\newline
+$\displaystyle (\sigma^2)^{(0)} = \frac{1}{n-c}[\sum_{i=c+1}^n(y_i-\beta_0^{(0)}-\beta_1^{(0)}x_i)^2]$\newline
+
+\subsubsection*{(c)}
+\hspace{12 pt} In order to test the implemeted EM algorithm for parameter estimation, we have simulated data for this purpose. For a sample size of $n=100$,
+we make the true parameters such that with complete data, $\hat\beta_1/se(\hat\beta_1)\approx3$, 
+i.e. $\sigma^2 = (\beta_1/3)^2\sum_{i=1}^n(x_i-\bar x)^2$. The R function $EM.censor$ takes in $x,y,\tau$ and estimate $\theta$ with initializatiion
+from (b) and $lm()$ for updating $\beta$. The criteria for deciding when to stop the optimization is with $diff < tol$, i.e. the difference between
+the last and current $\theta$ is below the fixed tolerance value.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### (c) EM implementation}
+EM.censor <- \hlfunctioncall{function}(x, y, tau) \{
+    obs <- \hlfunctioncall{which}(!\hlfunctioncall{is.na}(y))  \hlcomment{# observed y indices}
+    cen <- \hlfunctioncall{which}(\hlfunctioncall{is.na}(y))  \hlcomment{# censored y indices}
+    c <- \hlfunctioncall{length}(cen)
+    n <- \hlfunctioncall{length}(y)  \hlcomment{# sample size}
+    ny <- y  \hlcomment{#censored y's to be updated by EM}
+\hlcomment{    # simulation setup}
+    tol <- 1e-08
+    iter <- 0
+    lim <- 1000
+    beta0.trace <- \hlfunctioncall{matrix}(NA, lim, 1)
+    beta1.trace <- \hlfunctioncall{matrix}(NA, lim, 1)
+    sigma2.trace <- \hlfunctioncall{matrix}(NA, lim, 1)
+    more = TRUE
+\hlcomment{    # initialization}
+    beta1 <- ((n - c) * \hlfunctioncall{mean}(y[obs]) + c * tau)/(n * \hlfunctioncall{mean}(x))
+    beta0 <- \hlfunctioncall{mean}(y[obs]) - beta1 * \hlfunctioncall{mean}(x)
+    sigma2 <- \hlfunctioncall{sum}((y[obs] - beta0 - beta1 * x[obs])^2)/(n - c)
+\hlcomment{    # auxiliary function}
+    rho <- \hlfunctioncall{function}(x) \{
+        \hlfunctioncall{return}(\hlfunctioncall{dnorm}(x)/(1 - \hlfunctioncall{pnorm}(x)))
+    \}
+\hlcomment{    # main optimization}
+    \hlfunctioncall{while} (more) \{
+        iter <- iter + 1
+\hlcomment{        # E-step}
+        mu <- beta0 + beta1 * x
+        tauS <- (tau - mu)/\hlfunctioncall{sqrt}(sigma2)
+        ny[cen] <- mu[cen] + \hlfunctioncall{sqrt}(sigma2) * \hlfunctioncall{rho}(tauS[cen])  \hlcomment{# \hlfunctioncall{E}(Z)}
+        vy <- sigma2 * (1 + tauS[cen] * \hlfunctioncall{rho}(tauS[cen]) - \hlfunctioncall{rho}(tauS[cen])^2)  \hlcomment{# \hlfunctioncall{V}(Z)}
+\hlcomment{        # M-step}
+        fit <- \hlfunctioncall{lm}(ny ~ x)  \hlcomment{# LS fit for beta MLEs}
+        b0 <- fit$coefficients[1]
+        b1 <- fit$coefficients[2]
+        sig2 <- (\hlfunctioncall{sum}(fit$residuals^2) + \hlfunctioncall{sum}(vy))/n  \hlcomment{# MLE of sigma2}
+\hlcomment{        # convergence}
+        diff.th <- \hlfunctioncall{abs}(beta0 - b0) + \hlfunctioncall{abs}(beta1 - b1) + \hlfunctioncall{abs}(\hlfunctioncall{log}(sigma2) - \hlfunctioncall{log}(sig2))
+        more <- (diff.th > tol)  \hlcomment{# check tol}
+\hlcomment{        # update theta}
+        beta0 <- b0
+        beta1 <- b1
+        sigma2 <- sig2
+\hlcomment{        # record trace}
+        beta0.trace[iter] <- beta0
+        beta1.trace[iter] <- beta1
+        sigma2.trace[iter] <- sigma2
+    \}
+\hlcomment{    # results}
+    theta.result <- \hlfunctioncall{c}(beta0, beta1, sigma2)
+    \hlfunctioncall{names}(theta.result) <- \hlfunctioncall{c}(\hlstring{"beta0"}, \hlstring{"beta1"}, \hlstring{"sigma2"})
+    \hlfunctioncall{print}(theta)  \hlcomment{#global true parameter}
+    \hlfunctioncall{print}(iter)
+    \hlfunctioncall{print}(theta.result)
+\hlcomment{    # plots}
+    \hlfunctioncall{par}(mfrow = \hlfunctioncall{c}(3, 1), mar = \hlfunctioncall{c}(4, 4, 2, 2), cex = 10, cex.main = 1.2)
+    \hlfunctioncall{plot}(1:iter, beta0.trace[1:iter], xlab = \hlstring{"iteration"}, ylab = \hlstring{"beta0"}, \hlstring{"l"})
+    \hlfunctioncall{plot}(1:iter, beta1.trace[1:iter], xlab = \hlstring{"iteration"}, ylab = \hlstring{"beta1"}, \hlstring{"l"})
+    \hlfunctioncall{plot}(1:iter, sigma2.trace[1:iter], xlab = \hlstring{"iteration"}, ylab = \hlstring{"sigma2"}, 
+        \hlstring{"l"})
+    \hlfunctioncall{par}(mfrow = \hlfunctioncall{c}(1, 1), cex = 10, cex.main = 1.2)
+    \hlfunctioncall{plot}(x, y, ylim = \hlfunctioncall{c}(\hlfunctioncall{min}(y[obs]) - 1, \hlfunctioncall{max}(y[obs]) + 2))  \hlcomment{# plot data}
+    \hlfunctioncall{points}(x[cen], ny[cen], type = \hlstring{"p"}, pch = 20)
+    \hlfunctioncall{lines}(\hlfunctioncall{c}(\hlfunctioncall{sort}(x)[1], \hlfunctioncall{sort}(x)[n]), \hlfunctioncall{c}(beta0 + beta1 * \hlfunctioncall{sort}(x)[1], beta0 + beta1 * 
+        \hlfunctioncall{sort}(x)[n]))  \hlcomment{# LS line}
+\}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+The test case (a) with a modest proportion of exceedances expected is shown below.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### test data generation}
+\hlfunctioncall{set.seed}(0)
+n <- 100  \hlcomment{# sample size}
+c <- n * 0.2  \hlcomment{# \hlfunctioncall{test} (a)/(b) exceedance=20%/80%}
+\hlcomment{# true parameter values}
+theta <- \hlfunctioncall{rep}(NA, 3)
+\hlfunctioncall{names}(theta) <- \hlfunctioncall{c}(\hlstring{"beta0"}, \hlstring{"beta1"}, \hlstring{"sigma2"})
+theta[\hlstring{"beta0"}] <- 0.5
+theta[\hlstring{"beta1"}] <- 2
+x <- \hlfunctioncall{runif}(n)
+theta[\hlstring{"sigma2"}] <- (theta[\hlstring{"beta1"}]/3)^2 * \hlfunctioncall{sum}((x - \hlfunctioncall{mean}(x))^2)
+\hlcomment{# simulated data}
+e <- \hlfunctioncall{rnorm}(n, mean = 0, sd = \hlfunctioncall{sqrt}(theta[\hlstring{"sigma2"}]))
+y <- theta[\hlstring{"beta0"}] + theta[\hlstring{"beta1"}] * x + e
+sort.y <- \hlfunctioncall{sort}(y, decreasing = TRUE)
+tau <- sort.y[c + 1]  \hlcomment{# threshold}
+y[\hlfunctioncall{which}(y > tau)] <- \hlfunctioncall{as.numeric}(\hlstring{"NA"})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### EM result}
+\hlfunctioncall{EM.censor}(x, y, tau)
+\end{alltt}
+\begin{verbatim}
+##  beta0  beta1 sigma2 
+##  0.500  2.000  3.211 
+## [1] 17
+##  beta0  beta1 sigma2 
+##  0.415  1.841  2.504
+\end{verbatim}
+\end{kframe}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS54c_a1} 
+
+}
+
+
+
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS54c_a2} 
+
+}
+
+
+
+\end{knitrout}
+
+
+\newpage
+The test case (b) with a high proportion of exceedances expected is shown below.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### EM result}
+\hlfunctioncall{EM.censor}(x, y, tau)
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+##  beta0  beta1 sigma2 
+##  0.500  2.000  3.211 
+## [1] 216
+##   beta0   beta1  sigma2 
+## -0.1705  1.8967  1.1354
+\end{verbatim}
+\end{kframe}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS54c_testb1} 
+
+}
+
+
+
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS54c_testb2} 
+
+}
+
+
+
+\end{knitrout}
+
+
+
+\newpage
+\subsubsection*{(d)}
+\hspace{12 pt} A different approach to this problem will be just directly minimize the negative log likelihood of the data.
+For the censored observations, we just involve the likelihood terms, $P(Y_i>\tau), Y_i\sim N(\mu_i,\sigma^2)$. We use $optim()$
+with BFGS option in R to estimate the parameters and their standard errors. 
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### (d) BFGS implementation}
+BFGS.censor <- \hlfunctioncall{function}(x, y, tau) \{
+    obs <- \hlfunctioncall{which}(!\hlfunctioncall{is.na}(y))  \hlcomment{# observed y indices}
+    cen <- \hlfunctioncall{which}(\hlfunctioncall{is.na}(y))  \hlcomment{# censored y indices}
+    c <- \hlfunctioncall{length}(cen)
+    n <- \hlfunctioncall{length}(y)  \hlcomment{# sample size}
+\hlcomment{    # initialization}
+    beta1 <- ((n - c) * \hlfunctioncall{mean}(y[obs]) + c * tau)/(n * \hlfunctioncall{mean}(x))
+    beta0 <- \hlfunctioncall{mean}(y[obs]) - beta1 * \hlfunctioncall{mean}(x)
+    sigma2 <- \hlfunctioncall{sum}((y[obs] - beta0 - beta1 * x[obs])^2)/(n - c)
+    init0 <- \hlfunctioncall{c}(beta0, beta1, sigma2)
+\hlcomment{    # log liklihood}
+    pp.lik <- \hlfunctioncall{function}(par, x, y, tau, obs, cen) \{
+        b0 <- par[1]
+        b1 <- par[2]
+        sig2 <- par[3]
+        mu <- b0 + b1 * x
+        \hlfunctioncall{if} (sig2 <= 0) \{
+            sig <- 1e-06
+        \} else \{
+            sig <- \hlfunctioncall{sqrt}(sig2)
+        \}
+        obs.lik <- \hlfunctioncall{sum}(\hlfunctioncall{log}(\hlfunctioncall{dnorm}(y[obs], mean = mu[obs], sd = sig)))
+        cen.lik <- \hlfunctioncall{sum}(\hlfunctioncall{log}(\hlfunctioncall{pnorm}(tau, mean = mu[cen], sd = sig, lower.tail = F)))
+        \hlfunctioncall{return}(-(obs.lik + cen.lik))
+    \}
+\hlcomment{    # optimize}
+    opt <- \hlfunctioncall{optim}(init0, pp.lik, x = x, y = y, tau = tau, obs = obs, cen = cen, 
+        method = \hlstring{"BFGS"}, control = \hlfunctioncall{list}(trace = TRUE, parscale = \hlfunctioncall{c}(1, 1, 10)), 
+        hessian = TRUE)
+\hlcomment{    # results}
+    \hlfunctioncall{print}(theta)
+    \hlfunctioncall{cat}(opt$par, \hlstring{"\textbackslash{}t theta \textbackslash{}n"})
+    \hlfunctioncall{cat}(\hlfunctioncall{sqrt}(\hlfunctioncall{diag}(\hlfunctioncall{solve}(opt$hessian))), \hlstring{"\textbackslash{}t \hlfunctioncall{se}(theta) \textbackslash{}n"})
+\}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+The test case (a) with a modest proportion of exceedances expected is shown below. It requires $iter=10$ for BFGS, while $iter=17$ for EM.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### BFGS result}
+\hlfunctioncall{BFGS.censor}(x, y, tau)
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\newpage
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## initial  value 191.328206 
+## iter  10 value 171.107012
+## final  value 171.049515 
+## converged
+##  beta0  beta1 sigma2 
+##  0.500  2.000  3.211 
+## 0.415 1.841 2.504 	 theta 
+## 0.3506 0.603 0.4165 	 se(theta)
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+The test case (b) with a high proportion of exceedances expected is shown below. It requires $iter=42$ for BFGS, while $iter=216$ for EM.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### BFGS result}
+\hlfunctioncall{BFGS.censor}(x, y, tau)
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## initial  value 187.280367 
+## iter  10 value 108.318570
+## iter  20 value 98.301409
+## iter  30 value 80.195175
+## iter  40 value 58.781916
+## final  value 55.725382 
+## converged
+##  beta0  beta1 sigma2 
+##  0.500  2.000  3.211 
+## -0.1705 1.897 1.136 	 theta 
+## 0.3105 0.6849 0.4201 	 se(theta)
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+
+\newpage
+\section*{Problem 5}
+\subsubsection*{(a)}
+\hspace{12 pt} The data are measurements of flux from the supernova as a function of (log) wavelength
+and time. Our goal is to estimate flux ($Y_{wt}$) as a smooth 2-dimensional function of log wavelength ($w$)
+and time $t$ pairs. We assume a normal likelihood as a function of parameters,
+$\theta = \{\kappa,\lambda,\sigma^2,\rho_w,\rho_t,\tau^2,\alpha\}$, $Y\sim N(\mu_{\theta},C_{\theta})$.\newline
+Here, $\mu_{\theta}$ is a vector of value for observation \newline
+$\displaystyle E(Y_{wt})=\mu(t;\theta)=\kappa f(\frac{t}{\lambda})$;
+and $C_{\theta}$ is a matrix with entries of pairwise covariances of the observations \newline
+$\displaystyle Cov(Y_{wt},Y_{w't'}) = 
+\sigma^2exp(\frac{-|w-w'|}{\rho_w})exp(\frac{-|t-t'|}{\rho_t}) + 
+\tau^2I(t=t') + \alpha v^2_{wt}I(w=w',t=t')$. \newline
+So the plots of data with respect to log wavelength and time are shown below.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{#### 5. optim}
+\hlfunctioncall{rm}(list = \hlfunctioncall{ls}(all = TRUE))  \hlcomment{# remove all objects}
+\hlfunctioncall{source}(\hlstring{"ps5prob5.R"})
+data$logw <- \hlfunctioncall{log}(data$wavelength)  \hlcomment{# log wavelength}
+data$verr <- (data$fluxerror)^2  \hlcomment{# square fluxerror}
+\hlcomment{## (a) plot flux data}
+\hlfunctioncall{attach}(data)
+\hlfunctioncall{par}(mfrow = \hlfunctioncall{c}(1, 2), cex = 10, cex.main = 1)
+\hlfunctioncall{plot}(logw, flux, xlab = \hlstring{"\hlfunctioncall{log}(wavelength)"}, ylab = \hlstring{"flux"})
+\hlfunctioncall{plot}(time, flux, xlab = \hlstring{"time"}, ylab = \hlstring{"flux"})
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=\maxwidth]{figure/latex-PS55a} 
+
+}
+
+
+\begin{kframe}\begin{alltt}
+\hlfunctioncall{detach}(data)
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+\subsubsection*{(b)}
+\hspace{12 pt} A reasonable set of initial values based on the scale of the flux values and the log wavelength and time values
+are given below inline with the code.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{## (b) initialize}
+theta <- \hlfunctioncall{rep}(NA, 7)
+\hlfunctioncall{names}(theta) <- \hlfunctioncall{c}(\hlstring{"kappa"}, \hlstring{"lambda"}, \hlstring{"sigma2"}, \hlstring{"rho_w"}, \hlstring{"rho_t"}, \hlstring{"tau2"}, \hlstring{"alpha"})
+theta[\hlstring{"lambda"}] <- 0.8
+theta[\hlstring{"kappa"}] <- \hlfunctioncall{mean}(data$flux)/\hlfunctioncall{mean}(meanpts$value)
+Ef <- \hlfunctioncall{meanfunc}(theta, data$time)
+resf <- data$flux - Ef
+Covf <- \hlfunctioncall{outer}(resf, resf)
+theta[\hlstring{"sigma2"}] <- \hlfunctioncall{mean}(\hlfunctioncall{diag}(Covf)) * 0.3
+theta[\hlstring{"rho_w"}] <- \hlfunctioncall{diff}(\hlfunctioncall{range}(data$logw))
+theta[\hlstring{"rho_t"}] <- \hlfunctioncall{diff}(\hlfunctioncall{range}(data$time))
+theta[\hlstring{"tau2"}] <- \hlfunctioncall{mean}(\hlfunctioncall{diag}(Covf)) * 0.3
+theta[\hlstring{"alpha"}] <- \hlfunctioncall{mean}(\hlfunctioncall{diag}(Covf))/\hlfunctioncall{mean}(\hlfunctioncall{sqrt}(data$verr))
+\hlfunctioncall{print}(theta)
+\end{alltt}
+\begin{verbatim}
+##     kappa    lambda    sigma2     rho_w     rho_t      tau2     alpha 
+##  0.335992  0.800000  0.003243  0.025623 38.916000  0.003243 42.993455
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+
+\subsubsection*{(c)}
+\hspace{12 pt} We use $optim()$ to optimize the log likelihood to find estimates and standard error for $\theta$. The results
+below showed that we have tried 2 different methods for finding the global optimum, the default Nelder-Mead and the BFGS. Also,
+$parscale$ is used in the optimization to make the optimization reliable. However, due to the complexity in the likelihood function,
+we relaxed the convergence a little to reduce the optimization time.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{## (c) optimize}
+covfunc <- \hlfunctioncall{with}(\hlfunctioncall{list}(verrs = data$verr), \hlfunctioncall{function}(theta, wavel, times) \{
+    n <- \hlfunctioncall{length}(times)
+    CV <- \hlfunctioncall{matrix}(0, n, n)
+    scale_w <- wavel/theta[\hlstring{"rho_w"}]
+    scale_t <- times/theta[\hlstring{"rho_t"}]
+    alpv2 <- theta[\hlstring{"alpha"}] * verrs
+    \hlfunctioncall{for} (i in 1:n) \{
+        \hlfunctioncall{for} (j in 1:n) \{
+            del_w <- \hlfunctioncall{abs}(scale_w[i] - scale_w[j])
+            del_t <- \hlfunctioncall{abs}(scale_t[i] - scale_t[j])
+            cv <- theta[\hlstring{"sigma2"}] * \hlfunctioncall{exp}(-del_w) * \hlfunctioncall{exp}(-del_t)
+            \hlfunctioncall{if} (!del_t) \{
+                cv <- cv + theta[\hlstring{"tau2"}]
+                \hlfunctioncall{if} (!del_w) \{
+                  cv <- cv + alpv2[i]
+                \}
+            \}
+            CV[i, j] <- cv
+        \}
+    \}
+    CV
+\})
+\hlcomment{# negative log likelihood}
+\hlfunctioncall{require}(mvtnorm)
+nn.lik <- \hlfunctioncall{with}(\hlfunctioncall{list}(f = data$flux, w = data$logw, t = data$time), \hlfunctioncall{function}(par) \{
+    MU <- \hlfunctioncall{meanfunc}(par, t)
+    CV <- \hlfunctioncall{covfunc}(par, w, t)
+    ll <- \hlfunctioncall{sum}(\hlfunctioncall{sum}(\hlfunctioncall{dmvnorm}(f, MU, CV, log = T)))
+    -ll
+\})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+init0 <- theta
+opt1 <- \hlfunctioncall{optim}(par = init0, fn = nn.lik, control = \hlfunctioncall{list}(trace = TRUE, parscale = init0, 
+    reltol = 1e-04, maxit = 80), hessian = TRUE)
+\end{alltt}
+\begin{verbatim}
+##   Nelder-Mead direct search function minimizer
+## function value for initial parameters = -1610.819434
+##   Scaled convergence tolerance is 0.161082
+## Stepsize computed as 0.100000
+## BUILD              8 -1597.511663 -1623.889530
+## EXTENSION         10 -1607.195503 -1647.098990
+## LO-REDUCTION      12 -1608.778113 -1647.098990
+## LO-REDUCTION      14 -1610.596435 -1647.098990
+## LO-REDUCTION      16 -1610.819434 -1647.098990
+## EXTENSION         18 -1611.126717 -1666.114092
+## LO-REDUCTION      20 -1621.006730 -1666.114092
+## EXTENSION         22 -1623.889530 -1690.194185
+## LO-REDUCTION      24 -1631.267141 -1690.194185
+## LO-REDUCTION      26 -1635.133629 -1690.194185
+## EXTENSION         28 -1640.554216 -1729.373748
+## LO-REDUCTION      30 -1647.098990 -1729.373748
+## EXTENSION         32 -1663.290820 -1761.646704
+## LO-REDUCTION      34 -1666.114092 -1761.646704
+## LO-REDUCTION      36 -1684.387736 -1761.646704
+## LO-REDUCTION      38 -1689.328919 -1761.646704
+## LO-REDUCTION      40 -1690.194185 -1761.646704
+## HI-REDUCTION      42 -1722.380543 -1761.646704
+## LO-REDUCTION      44 -1723.828526 -1761.646704
+## HI-REDUCTION      46 -1729.373748 -1761.646704
+## LO-REDUCTION      48 -1741.130855 -1761.646704
+## LO-REDUCTION      50 -1748.173626 -1761.646704
+## LO-REDUCTION      52 -1749.897789 -1761.646704
+## LO-REDUCTION      54 -1752.170165 -1761.646704
+## EXTENSION         56 -1756.418165 -1769.176145
+## LO-REDUCTION      58 -1756.762710 -1769.176145
+## LO-REDUCTION      60 -1757.052092 -1769.176145
+## EXTENSION         62 -1759.142872 -1778.579957
+## LO-REDUCTION      64 -1759.596655 -1778.579957
+## LO-REDUCTION      66 -1760.845131 -1778.579957
+## LO-REDUCTION      68 -1761.646704 -1778.579957
+## EXTENSION         70 -1763.350160 -1792.370206
+## LO-REDUCTION      72 -1768.382542 -1792.370206
+## LO-REDUCTION      74 -1769.176145 -1792.370206
+## LO-REDUCTION      76 -1769.458449 -1792.370206
+## EXTENSION         78 -1771.363143 -1814.308692
+## LO-REDUCTION      80 -1775.572363 -1814.308692
+## Exiting from Nelder Mead minimizer
+##     82 function evaluations used
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{cat}(\hlstring{"theta \textbackslash{}n"}, opt1$par, \hlstring{"\textbackslash{}n"})
+\end{alltt}
+\begin{verbatim}
+## theta 
+##  0.261 1.21 0.001584 0.04837 60.05 0.003646 16.87
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{cat}(\hlstring{"\hlfunctioncall{se}(theta) \textbackslash{}n"}, \hlfunctioncall{sqrt}(\hlfunctioncall{diag}(\hlfunctioncall{solve}(opt1$hessian))), \hlstring{"\textbackslash{}n"})
+\end{alltt}
+\begin{verbatim}
+## se(theta) 
+##  0.04703 0.3371 0.0001027 0.007372 11 NaN NaN
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+init0 <- theta
+opt2 <- \hlfunctioncall{optim}(par = init0, fn = nn.lik, method = \hlstring{"BFGS"}, control = \hlfunctioncall{list}(trace = TRUE, 
+    parscale = init0, reltol = 1e-04, maxit = 20))
+\end{alltt}
+\begin{verbatim}
+## initial  value -1610.819434
+## iter  10 value -1929.347625
+## final  value -1941.131307 
+## converged
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{cat}(\hlstring{"theta \textbackslash{}n"}, opt2$par, \hlstring{"\textbackslash{}n"})
+\end{alltt}
+\begin{verbatim}
+## theta 
+##  0.1759 0.8808 0.0005201 0.04311 30.64 0.00256 -1.27
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+
+\newpage
+\section*{Problem 6}
+\hspace{12 pt} In the work that won the Netflix Prize done by C. Volinsky etc. at AT\&T labs, a variation
+on the singular value decomposition (SVD) of the matrix factorization methodology is employed.
+
+Given a matrix $R$ that represents $m$ users (individual Netflix members) and $n$ items (movies)
+with entries of movie ratings $r_{ui}$, $R=\{r_{ui}\}_{1\leq u\leq m, 1\leq i\leq n}$,
+the SVD factorization-based methodology computes the besk rank-$f$ approximation
+$R^f=P_{m\times f}Q_{n\times f}^T$, where $f\leq m,n$.
+
+Due to the fact that most entries of $R$ in this movie recommendation problem are unknown,
+the SVD here is used to extend the given data by filling in the unknow ratings by estimation 
+$r_{ui} \sim R_{ui}^f = p_u^T \cdot q_i$, where $p_u$ is the $u$-th row of $P$ corresponding to user $u$
+and $q_i$ is the $i$-th row of $Q$ corresponding to item $i$.
+
+An EM-based algorithm is employed to iteratively compute the $R$ matrix SVD by doing
+least square minimization of $\|R-PQ^T\|_F$ when alternating the fixed point between
+matrix $P$ and $Q$, i.e. \newline
+$Q^T \leftarrow (P^TP)^{-1}P^TR$ \newline
+$P \leftarrow RQ(Q^TQ)^{-1}$\newline
+Shrinkage is integrated to alleviate the overfitting problem and further reduce the estimation error,\newline
+$Err(P,Q)\equiv \displaystyle\sum_{(u,i)}(r_{ui}-p_u^Tq_i)^2$.
+
+To be more specific, assuming that we have already computed the first $f-1$ columns of
+matrices $P,Q$. The pseudo code for computing the $f$-th column of matrices $P,Q$ is given below
+\cite{KDD07}:
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{# Problem 5.6: EM based SVD variant}
+f <- f + 1  \hlcomment{# iteration}
+computeNext <- \hlfunctioncall{function}(r, P, Q) \{
+\hlcomment{    #known ratings, user factors, item factors}
+\hlcomment{    # compute the f-th column of P,Q to fit given ratings columns 1,...,f-1}
+\hlcomment{    # were already computed}
+    a <- alpha
+    e <- eps
+\hlcomment{    # compute residuals portion not explained by previous factors}
+    \hlfunctioncall{for} (u in 1:m) \{
+        \hlfunctioncall{for} (i in 1:n) \{
+            r[u, i] <- r[u, i] - \hlfunctioncall{crossprod}(P[u, 1:(f - 1)], Q[i, 1:(f - 1)])
+            n <- s[u, i]  \hlcomment{# support behind r}
+            r[u, i] <- n * r[u, i]/(n + a * f)  \hlcomment{#shrinkage}
+        \}
+    \}
+\hlcomment{    # compute the f-th factor for each user and item by solving many least}
+\hlcomment{    # square problems, each with a single unknown}
+    \hlfunctioncall{while} (\hlfunctioncall{err}(P, Q) < 1 - e) \{
+        \hlfunctioncall{for} (u in 1:m) \{
+            P[u, f] <- \hlfunctioncall{crossprod}(r[u, ], Q[, f])/\hlfunctioncall{crossprod}(Q[, f])
+        \}
+        \hlfunctioncall{for} (i in 1:n) \{
+            Q[i, f] <- \hlfunctioncall{crossprod}(r[, i], P[, f])/\hlfunctioncall{crossprod}(P[, f])
+        \}
+    \}
+    \hlfunctioncall{return}(\hlfunctioncall{list}(P = P, Q = Q))
+\}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+At the end of the process, we obtain an approximation of all ratings in the form of a matrix product
+$PQ^T$, with predictions for unrated movies. The eigenvectors from SVD are user and item factors, while
+the eigenvalues are confidence indicators for the predictions.
+
+\begin{thebibliography}{9}
+\bibitem[1]{KDD07} R. Bell, Y. Koren, C. Volinsky, 
+"Modeling relationships at multiple scales to improve accuracy of large recommender systems",
+\textit{Proceedings of the 13th ACM SIGKDD International Conference on Knowledge Discovery and Data mining},
+pp. 95-104, Aug. 2007, San Jose, CA.
+\end{thebibliography}
+
+\end{document}
